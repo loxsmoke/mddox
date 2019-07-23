@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Authors>LoxSmoke</Authors>
+    <Product>mddox</Product>
+    <PackageId>LoxSmoke.mddox</PackageId>
+    <Version>0.1.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Copyright>Copyright 2019 LoxSmoke</Copyright>
+    <PackageProjectUrl>https://github.com/loxsmoke/mddox</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/loxsmoke/mddox</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>xml documentation comments docxml loxsmoke mddox</PackageTags>
+    <Description>Simple Markdown documentation generator</Description>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>mddox</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LoxSmoke.DocXml" Version="3.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

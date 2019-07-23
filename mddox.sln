@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mddox", "src\mddox.csproj", "{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Coverage|Any CPU = Coverage|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Coverage|Any CPU.ActiveCfg = Release|Any CPU
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Coverage|Any CPU.Build.0 = Release|Any CPU
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BB0AE0C-6005-466B-A31C-CC7DBEA46602}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Coverage|Any CPU.ActiveCfg = Coverage|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Coverage|Any CPU.Build.0 = Coverage|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74630136-ED1D-4148-AC9C-E3B7BD5D1A81}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9C6905FF-9D8D-4BB5-A4B3-522E31984442}
+	EndGlobalSection
+EndGlobal
