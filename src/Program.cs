@@ -32,6 +32,9 @@ namespace MdDox
     {
         static void Help()
         {
+            Console.WriteLine($"mddox, version {Assembly.GetExecutingAssembly().GetName().Version}, (c) 2019 loxsmoke ");
+            Console.WriteLine("Markdown documentation generator. See https://github.com/loxsmoke/mddox for more info.");
+            Console.WriteLine();
             Console.WriteLine("Usage:");
             Console.WriteLine("   mddox <assembly> <optional-parameters>");
             Console.WriteLine("   <assembly>             The name of the assembly to document.");
@@ -63,12 +66,20 @@ namespace MdDox
                 {
                     case "--output":
                     case "-o":
-                        if (++i == args.Length) return errorReturn;
+                        if (++i == args.Length)
+                        {
+                            Console.WriteLine("Error: Missing output file name");
+                            return errorReturn;
+                        }
                         outputFile = args[i];
                         break;
                     case "--format":
                     case "-f":
-                        if (++i == args.Length) return errorReturn;
+                        if (++i == args.Length)
+                        {
+                            Console.WriteLine("Error: Missing format");
+                            return errorReturn;
+                        }
                         format = args[i];
                         break;
                     case "--ignore-methods":
@@ -77,7 +88,11 @@ namespace MdDox
                         break;
                     case "--ignore-attribute":
                     case "-a":
-                        if (++i == args.Length) break;
+                        if (++i == args.Length)
+                        {
+                            Console.WriteLine("Error: Missing attribute name");
+                            return errorReturn;
+                        }
                         ignoreAttributes.Add(args[i]);
                         break;
                     case "--recursive":
@@ -91,10 +106,22 @@ namespace MdDox
                         break;
                     case "--type":
                     case "-t":
-                        if (++i == args.Length) return errorReturn;
+                        if (++i == args.Length)
+                        {
+                            Console.WriteLine("Error: Missing type name");
+                            return errorReturn;
+                        }
                         typeName = args[i];
                         break;
+                    case "--help":
+                    case "-h":
+                        return errorReturn;
                     default:
+                        if (args[i].StartsWith("-"))
+                        {
+                            Console.WriteLine($"Error: Unknown parameter {args[i]}");
+                            return errorReturn;
+                        }
                         if (assemblyName == null) assemblyName = args[i];
                         break;
                 }
