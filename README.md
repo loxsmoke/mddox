@@ -2,9 +2,9 @@
 
 Global tool to create simple markdown documentation using reflection and XML comments that are extracted from the source code by the compiler.
 
-[![XML documentation comments on MSDN](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/xmldoc/xml-documentation-comments)]
-
 [![Sample documentation](https://github.com/loxsmoke/DocXml/blob/master/api-reference.md)]
+
+XML documentation comments on MSDN. https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/xmldoc/xml-documentation-comments
 
 
 ## Installation
