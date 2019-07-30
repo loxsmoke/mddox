@@ -10,7 +10,7 @@ XML documentation comments on MSDN. https://docs.microsoft.com/en-us/dotnet/csha
 ## Installation
 
 ```bash
-dotnet install tool -g loxsmoke.mddox
+dotnet tool install -g loxsmoke.mddox
 ```
 
 ## Uninstallation
