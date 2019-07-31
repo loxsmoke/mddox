@@ -45,7 +45,7 @@ namespace MdDox
 
             TypesToDocumentSet = new HashSet<Type>(TypesToDocument.Select(t => t.Type));
             typeLinkConverter = (type, _) => TypesToDocumentSet.Contains(type) ?
-                Writer.HeadingLink(TypeTitle(type), type.Name) : null;
+                Writer.HeadingLink(TypeTitle(type), type.ToNameString()) : null;
         }
 
         public static void GenerateMarkdown(
@@ -139,7 +139,7 @@ namespace MdDox
 
         static string TypeTitle(Type type)
         {
-            return type.Name + (type.IsEnum ? " Enum" : " Class");
+            return type.ToNameString() + (type.IsEnum ? " Enum" : " Class");
         }
 
         static (string cref, string innerText, string beforeText, string afterText) FindTagWithCref(string text, string tag)

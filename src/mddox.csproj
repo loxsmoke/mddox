@@ -6,7 +6,7 @@
     <Authors>LoxSmoke</Authors>
     <Product>mddox</Product>
     <PackageId>LoxSmoke.mddox</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Copyright>Copyright 2019 LoxSmoke</Copyright>
     <PackageProjectUrl>https://github.com/loxsmoke/mddox</PackageProjectUrl>
@@ -19,11 +19,11 @@
     <ToolCommandName>mddox</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LoxSmoke.DocXml" Version="3.2.1" />
+    <PackageReference Include="LoxSmoke.DocXml" Version="3.2.2" />
   </ItemGroup>
 
   <ItemGroup>
