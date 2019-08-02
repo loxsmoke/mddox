@@ -1,4 +1,4 @@
-[![NuGet version](https://badge.fury.io/nu/LoxSmoke.mddox.svg)](https://badge.fury.io/nu/LoxSmoke.mddox)
+[![NuGet version](https://badge.fury.io/nu/LoxSmoke.mddox.svg)](https://badge.fury.io/nu/LoxSmoke.mddox) [![NuGet](https://img.shields.io/nuget/dt/LoxSmoke.mddox.svg)](https://www.nuget.org/packages/LoxSmoke.mddox) 
 
 # mddox
 
