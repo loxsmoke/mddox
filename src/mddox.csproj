@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <Authors>LoxSmoke</Authors>
     <Product>mddox</Product>
     <PackageId>LoxSmoke.mddox</PackageId>
