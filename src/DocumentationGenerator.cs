@@ -58,16 +58,13 @@ namespace MdDox
                     (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
                     type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
                 {
-                    return Writer.Link(MsdnUrlForType(type, msdnView), type.ToNameString());
+                    return Writer.Link(MsdnUrlForType(type, msdnView),
+                        type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
                 }
                 if (type.IsGenericTypeDefinition)
                 {
-                    return $"*{type.Name.CleanGenericTypeName()}*";
+                    return $"{type.Name.CleanGenericTypeName()}";
                 }
-                //if (type.Assembly.GetName.)
-                // if (t.IsGenericParameter) return $"+{t.Name}+";
-                // return $"*{t.ToNameString()}*";
-                // msdnLinks
                 return null;
             };
         }

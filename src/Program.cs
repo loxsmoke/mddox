@@ -153,7 +153,7 @@ namespace MdDox
         static void Main(string[] args)
         {
             var options = Parse(args);
-            if (options == null)
+            if (options?.AssemblyName == null)
             {
                 Help();
                 return;
