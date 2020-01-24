@@ -77,9 +77,11 @@ namespace MdDox
             bool ignoreMethods,
             bool recursive,
             bool msdnLinks,
-            string msdnView)
+            string msdnView,
+            bool showDateLine)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, writer, outputFileName);
+            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+                writer, outputFileName);
         }
 
         public static void GenerateMarkdown(
@@ -90,9 +92,11 @@ namespace MdDox
             bool ignoreMethods,
             bool recursive,
             bool msdnLinks,
-            string msdnView)
+            string msdnView,
+            bool showDateLine)
         {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, writer, outputFileName);
+            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+                writer, outputFileName);
         }
 
         static bool HasIgnoreAttribute(PropertyInfo info, HashSet<string> ignoreAttributes)
@@ -123,6 +127,7 @@ namespace MdDox
             bool ignoreMethods,
             bool msdnLinks,
             string msdnView,
+            bool showDateLine,
             IMarkdownWriter markdownWriter,
             string outputFileName)
         {
@@ -150,6 +155,7 @@ namespace MdDox
             // Generate markdown
             var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView);
             if (assembly != null) generator.WriteDocumentTitle(assembly);
+            if (showDateLine) generator.WritedDateLine();
             generator.WriteTypeIndex();
             generator.DocumentTypes();
 
@@ -162,6 +168,13 @@ namespace MdDox
         {
             Writer.WriteH1($"{Path.GetFileName(assembly.ManifestModule.Name)} v.{assembly.GetName().Version} " +
                            titleText ?? "");
+        }
+
+        public void WritedDateLine()
+        {
+            Writer.Write("Created by ");
+            Writer.WriteLink("https://github.com/loxsmoke/mddox", "mddox");
+            Writer.WriteLine($" on {DateTime.Now.ToShortDateString()}");
         }
 
         static string TypeTitle(Type type)
@@ -231,7 +244,6 @@ namespace MdDox
         static string MsdnUrlForType(Type type, string view = null)
         {
             var docLocale = "en-us";
-            var sss = Environment.Version.ToString();
             var urlParameters = string.IsNullOrEmpty(view) ? "" : $"?view={view}";
             var typeNameFragment = type.FullName.ToLowerInvariant();
             if (typeNameFragment.Contains('`')) typeNameFragment = typeNameFragment.Replace('`', '-');

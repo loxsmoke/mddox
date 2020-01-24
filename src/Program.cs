@@ -51,6 +51,7 @@ namespace MdDox
             Console.WriteLine("   --type <name>          Document specified only this and referenced types.");
             Console.WriteLine("   --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types." + Environment.NewLine +
                               "                          View is an optional parameter specifying the version of the type. For example: netcore-3.1");
+            Console.WriteLine("   --no-title             Do not write the line with the document creation date.");
         }
 
         static CommandLineOptions Parse(string [] args)
@@ -122,7 +123,10 @@ namespace MdDox
                         {
                             options.MsdnView = args[++i];
                         }
-
+                        break;
+                    case "--no-title":
+                    case "-n":
+                        options.ShowTitle = false;
                         break;
                     default:
                         if (args[i].StartsWith("-"))
@@ -201,7 +205,7 @@ namespace MdDox
                 DocumentationGenerator.GenerateMarkdown(rootType, 
                     rootType == null ? myAssembly : null, options.Recursive, options.RecursiveAssemblies, 
                     options.IgnoreAttributes, options.IgnoreMethods, 
-                    options.MsdnLinks, options.MsdnView,
+                    options.MsdnLinks, options.MsdnView, options.ShowTitle,
                     writer, options.OutputFile);
             }
             catch (Exception exc)
