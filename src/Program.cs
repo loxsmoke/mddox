@@ -40,18 +40,21 @@ namespace MdDox
             Console.WriteLine("   <assembly>             The name of the assembly to document.");
             Console.WriteLine("");
             Console.WriteLine("Optional parameters:");
-            Console.WriteLine("   --output <output_md>   The name of the markdown output file.");
-            Console.WriteLine($"   --format <format>      The markdown file format. Valid values: {MarkdownFormatNames}.");
-            Console.WriteLine("   --recursive            Step into referenced assemblies recursively.");
-            Console.WriteLine("   --recursive <assembly> Step recursivelly only into specified assembly or assemblies.");
-            Console.WriteLine("   --ignore-methods       Do not generate documentation for methods and constructors.");
-            Console.WriteLine("   --ignore-attribute <name> " + Environment.NewLine +
-                              "                          Do not generate documentation for properties with specified custom attribute." + Environment.NewLine +
-                              "                          For example JsonIgnoreAttribute");
-            Console.WriteLine("   --type <name>          Document specified only this and referenced types.");
-            Console.WriteLine("   --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types." + Environment.NewLine +
-                              "                          View is an optional parameter specifying the version of the type. For example: netcore-3.1");
-            Console.WriteLine("   --no-title             Do not write the line with the document creation date.");
+            Console.WriteLine("   -o | --output <output_md>   The name of the markdown output file.");
+            Console.WriteLine($"   -f | --format <format>      The markdown file format. Valid values: {MarkdownFormatNames}.");
+            Console.WriteLine("   -r | --recursive            Step into referenced assemblies recursively.");
+            Console.WriteLine("   -r | --recursive <assembly> Step recursivelly only into specified assembly or assemblies.");
+            Console.WriteLine("                               This parameter can be used multiple times to specify multiple assemblies.");
+            Console.WriteLine("   -m | --ignore-methods       Do not generate documentation for methods and constructors.");
+            Console.WriteLine("   -a | --ignore-attribute <name> ");
+            Console.WriteLine("                               Do not generate documentation for properties with specified custom attribute.");
+            Console.WriteLine("                               For example JsonIgnoreAttribute");
+            Console.WriteLine("                               This parameter can be used multiple times to specify multiple sttributes.");
+            Console.WriteLine("   -t | --type <name>          Document only this type and all types referenced by this type.");
+            Console.WriteLine("   -d | --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types.");
+            Console.WriteLine("                               The documentation pages are located at this site https://docs.microsoft.com");
+            Console.WriteLine("                               View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1");
+            Console.WriteLine("   -n | --no-title             Do not write the \"created by mddox at date\" in the markdown file.");
         }
 
         static CommandLineOptions Parse(string [] args)
