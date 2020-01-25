@@ -66,4 +66,4 @@ Document one type and all referenced types from different assemblies
 ```bash
 mddox MyAssembly.dll --type ClassToDocument --recursive ReferencedAssembly1.dll --recursive ReferencedAssembly2.dll
 ```
-`xddddddddddddd
+
