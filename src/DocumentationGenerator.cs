@@ -25,7 +25,9 @@ namespace MdDox
         public DocumentationGenerator(
             IMarkdownWriter writer,
             TypeCollection typeCollection,
-            Type firstType = null)
+            Type firstType = null,
+            bool msdnLinks = false,
+            string msdnView = null)
         {
             Reader = new DocXmlReader();
             Writer = writer;
@@ -44,8 +46,27 @@ namespace MdDox
             }
 
             TypesToDocumentSet = new HashSet<Type>(TypesToDocument.Select(t => t.Type));
-            typeLinkConverter = (type, _) => TypesToDocumentSet.Contains(type) ?
-                Writer.HeadingLink(TypeTitle(type), type.ToNameString()) : null;
+            typeLinkConverter = (type, _) =>
+            {
+                if (TypesToDocumentSet.Contains(type))
+                {
+                    return Writer.HeadingLink(TypeTitle(type), type.ToNameString());
+                }
+                if (msdnLinks &&
+                    type != typeof(string) &&
+                    !type.IsValueType &&
+                    (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
+                    type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
+                {
+                    return Writer.Link(MsdnUrlForType(type, msdnView),
+                        type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
+                }
+                if (type.IsGenericTypeDefinition)
+                {
+                    return $"{type.Name.CleanGenericTypeName()}";
+                }
+                return null;
+            };
         }
 
         public static void GenerateMarkdown(
@@ -54,9 +75,13 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
-            bool recursive)
+            bool recursive,
+            bool msdnLinks,
+            string msdnView,
+            bool showDateLine)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, writer, outputFileName);
+            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+                writer, outputFileName);
         }
 
         public static void GenerateMarkdown(
@@ -65,9 +90,13 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
-            bool recursive)
+            bool recursive,
+            bool msdnLinks,
+            string msdnView,
+            bool showDateLine)
         {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, writer, outputFileName);
+            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+                writer, outputFileName);
         }
 
         static bool HasIgnoreAttribute(PropertyInfo info, HashSet<string> ignoreAttributes)
@@ -96,6 +125,9 @@ namespace MdDox
             List<string> recursiveAssemblies,
             List<string> ignoreAttributes,
             bool ignoreMethods,
+            bool msdnLinks,
+            string msdnView,
+            bool showDateLine,
             IMarkdownWriter markdownWriter,
             string outputFileName)
         {
@@ -121,8 +153,9 @@ namespace MdDox
                 TypeCollection.ForReferencedTypes(rootType, reflectionSettings);
 
             // Generate markdown
-            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType);
+            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView);
             if (assembly != null) generator.WriteDocumentTitle(assembly);
+            if (showDateLine) generator.WritedDateLine();
             generator.WriteTypeIndex();
             generator.DocumentTypes();
 
@@ -135,6 +168,13 @@ namespace MdDox
         {
             Writer.WriteH1($"{Path.GetFileName(assembly.ManifestModule.Name)} v.{assembly.GetName().Version} " +
                            titleText ?? "");
+        }
+
+        public void WritedDateLine()
+        {
+            Writer.Write("Created by ");
+            Writer.WriteLink("https://github.com/loxsmoke/mddox", "mddox");
+            Writer.WriteLine($" on {DateTime.Now.ToShortDateString()}");
         }
 
         static string TypeTitle(Type type)
@@ -191,6 +231,24 @@ namespace MdDox
                 return crefText.Substring(crefText.IndexOf(":") + 1);
             }
             return crefText;
+        }
+
+        /// <summary>
+        /// Generate URL to the documentation page of the type at https://docs.microsoft.com/
+        /// </summary>
+        /// <param name="type">The type to generate url for</param>
+        /// <param name="view">The documentation framework version parameter.
+        /// For example netcore-3.1, netframework-4.8, netstandard-2.1, and so on.
+        /// If not specified then view parameter is omitted.</param>
+        /// <returns>URL to the type documentation page</returns>
+        static string MsdnUrlForType(Type type, string view = null)
+        {
+            var docLocale = "en-us";
+            var urlParameters = string.IsNullOrEmpty(view) ? "" : $"?view={view}";
+            var typeNameFragment = type.FullName.ToLowerInvariant();
+            if (typeNameFragment.Contains('`')) typeNameFragment = typeNameFragment.Replace('`', '-');
+            var url = $"https://docs.microsoft.com/{docLocale}/dotnet/api/{typeNameFragment}{urlParameters}";
+            return url;
         }
 
         /// <summary>
@@ -264,7 +322,7 @@ namespace MdDox
 
             if (typeData.Type.BaseType != null && typeData.Type.BaseType != typeof(Object))
             {
-                Writer.WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter));
+                Writer.WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
             }
 
             var typeComments = Reader.GetTypeComments(typeData.Type);
@@ -294,7 +352,7 @@ namespace MdDox
                 {
                     Writer.WriteTableRow(
                         Writer.Bold(prop.Info.Name),
-                        prop.Info.ToTypeNameString(typeLinkConverter),
+                        prop.Info.ToTypeNameString(typeLinkConverter, true),
                         ProcessTags(prop.Comments.Summary));
                 }
             }
@@ -308,7 +366,7 @@ namespace MdDox
                     .OrderBy(p => p.Info.GetParameters().Length))
                 {
                     Writer.WriteTableRow(
-                        Writer.Bold(typeData.Type.ToNameString() + prop.Info.ToParametersString(typeLinkConverter)),
+                        Writer.Bold(typeData.Type.ToNameString() + prop.Info.ToParametersString(typeLinkConverter, true)),
                         prop.Comments.Summary);
                 }
             }
@@ -324,8 +382,8 @@ namespace MdDox
                 {
                     var methodInfo = method.Info as MethodInfo;
                     Writer.WriteTableRow(
-                        Writer.Bold(methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter)),
-                        methodInfo.ToTypeNameString(typeLinkConverter),
+                        Writer.Bold(methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true)),
+                        methodInfo.ToTypeNameString(typeLinkConverter, true),
                         method.Comments.Summary);
                 }
             }
@@ -338,7 +396,7 @@ namespace MdDox
                 {
                     Writer.WriteTableRow(
                         Writer.Bold(field.Info.Name),
-                        field.Info.ToTypeNameString(typeLinkConverter),
+                        field.Info.ToTypeNameString(typeLinkConverter, true),
                         ProcessTags(field.Comments.Summary));
                 }
             }
