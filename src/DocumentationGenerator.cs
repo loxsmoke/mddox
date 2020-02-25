@@ -320,7 +320,9 @@ namespace MdDox
             Writer.WriteH1(TypeTitle(typeData.Type));
             Writer.WriteLine("Namespace: " + typeData.Type.Namespace);
 
-            if (typeData.Type.BaseType != null && typeData.Type.BaseType != typeof(Object))
+            if (typeData.Type.BaseType != null &&
+                typeData.Type.BaseType != typeof(Object) &&
+                typeData.Type.BaseType != typeof(ValueType))
             {
                 Writer.WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
             }
