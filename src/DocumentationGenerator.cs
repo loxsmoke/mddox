@@ -78,9 +78,10 @@ namespace MdDox
             bool recursive,
             bool msdnLinks,
             string msdnView,
-            bool showDateLine)
+            bool showDateLine,
+            bool verbose)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -93,9 +94,10 @@ namespace MdDox
             bool recursive,
             bool msdnLinks,
             string msdnView,
-            bool showDateLine)
+            bool showDateLine,
+            bool verbose)
         {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, 
+            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -128,24 +130,28 @@ namespace MdDox
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
+            bool verbose,
             IMarkdownWriter markdownWriter,
             string outputFileName)
         {
             // Reflection setup
             var allAssemblyTypes = assembly != null;
             if (assembly == null) assembly = rootType.Assembly;
-            var ignoreAttributesHash = ignoreAttributes == null || ignoreAttributes.Count == 0 ? null : new HashSet<string>(ignoreAttributes);
+            var ignoreAttributesSet = ignoreAttributes == null || ignoreAttributes.Count == 0 ? null : new HashSet<string>(ignoreAttributes);
+
+            if (recursiveAssemblies != null && recursiveAssemblies.Count == 0) recursiveAssemblies = null;
+
+            if (verbose)
+            {
+                if (assembly != null) Log(assembly, "Root assembly ");
+            }
 
             var reflectionSettings = ReflectionSettings.Default;
-            var prevPropertyFilter = reflectionSettings.PropertyFilter;
-            reflectionSettings.PropertyFilter = info =>
-                (prevPropertyFilter == null || prevPropertyFilter(info)) && !HasIgnoreAttribute(info, ignoreAttributesHash);
-            reflectionSettings.MethodFilter = info => !ignoreMethods && !HasIgnoreAttribute(info, ignoreAttributesHash);
-            reflectionSettings.TypeFilter = type => !HasIgnoreAttribute(type, ignoreAttributesHash);
+            reflectionSettings.PropertyFilter = info => PropertyFilter(info, ignoreAttributesSet, verbose);
+            reflectionSettings.MethodFilter = info => MethodFilter(info, ignoreMethods, ignoreAttributesSet, verbose);
+            reflectionSettings.TypeFilter = type => TypeFilter(type, ignoreAttributesSet, verbose);
             reflectionSettings.AssemblyFilter =
-                reflectionAssembly => reflectionAssembly == assembly || recursiveAssemblyTraversal &&
-                (recursiveAssemblies == null || recursiveAssemblies.Count == 0 || 
-                 recursiveAssemblies.Any(name => name.Equals(Path.GetFileName(assembly.Location), StringComparison.OrdinalIgnoreCase)));
+                reflectionAssembly => AssemblyFilter(reflectionAssembly, assembly, recursiveAssemblies, recursiveAssemblyTraversal, verbose);
 
             // Reflection
             var typeCollection = allAssemblyTypes ?
@@ -163,6 +169,90 @@ namespace MdDox
             File.WriteAllText(outputFileName, generator.Writer.FullText);
         }
 
+        #region Filters and logging
+        public static bool PropertyFilter(PropertyInfo info, HashSet<string> ignoreAttributesSet, bool verbose)
+        {
+            var document = !HasIgnoreAttribute(info, ignoreAttributesSet);
+            if (verbose)
+            {
+                Log(info, (document ? "Document " : "Ignore by attribute ") + "property ");
+            }
+            return document;
+        }
+
+        public static void Log(PropertyInfo info, string message)
+        {
+            Console.WriteLine("    " + message + info.ToTypeNameString() + " " + info.Name);
+        }
+
+        public static bool MethodFilter(MethodBase info, bool ignoreMethods, HashSet<string> ignoreAttributesSet, bool verbose)
+        {
+            if (ignoreMethods) return false;
+            var document = !HasIgnoreAttribute(info, ignoreAttributesSet);
+            if (verbose)
+            {
+                Log(info, (document ? "Document " : "Ignore by attribute ") + "method ");
+            }
+            return document;
+        }
+
+        public static void Log(MethodBase info, string message)
+        {
+            Console.WriteLine("    " + message + info.Name + info.ToParametersString());
+        }
+
+        public static bool TypeFilter(Type type, HashSet<string> ignoreAttributesSet, bool verbose)
+        {
+            if (HasIgnoreAttribute(type, ignoreAttributesSet))
+            {
+                if (verbose) Log(type, "Ignore by attribute ");
+                return false;
+            }
+            if (verbose) Log(type, "Document type ");
+            return true;
+        }
+
+        public static void Log(Type type, string message)
+        {
+            Console.WriteLine("  " + message + type.ToNameString());
+        }
+
+        public static bool AssemblyFilter(
+            Assembly assembly,
+            Assembly rootAssembly,
+            List<string> recursiveAssemblies, 
+            bool recursiveAssemblyTraversal, 
+            bool verbose)
+        {
+            if (assembly == rootAssembly) return true;
+
+            if (!recursiveAssemblyTraversal)
+            {
+                if (!verbose) return false;
+                Log(assembly, "No recursive traversal. Ignoring ");
+                return false;
+            }
+
+            if (recursiveAssemblies == null) return true;
+
+            if (!recursiveAssemblies.Any(name => name.Equals(Path.GetFileName(assembly.Location), StringComparison.OrdinalIgnoreCase)))
+            {
+                if (!verbose) return false;
+                Log(assembly, "Assembly not in the list. Ignoring ");
+                return false;
+            }
+            if (File.Exists(Path.ChangeExtension(assembly.Location, ".xml"))) return true;
+            if (!verbose) return false;
+            Log(assembly, "No xml file for assemblu. Ignoring ");
+            return false;
+        }
+
+        public static void Log(Assembly assembly, string message)
+        {
+            Console.WriteLine(message + assembly.FullName);
+            Console.WriteLine("File path: " + assembly.Location);
+        }
+        #endregion
 
         public void WriteDocumentTitle(Assembly assembly, string titleText = "API documentation")
         {
@@ -179,7 +269,7 @@ namespace MdDox
 
         static string TypeTitle(Type type)
         {
-            return type.ToNameString() + (type.IsEnum ? " Enum" : " Class");
+            return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
         }
 
         static (string cref, string innerText, string beforeText, string afterText) FindTagWithCref(string text, string tag)

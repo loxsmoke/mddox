@@ -55,6 +55,7 @@ namespace MdDox
             Console.WriteLine("                               The documentation pages are located at this site https://docs.microsoft.com");
             Console.WriteLine("                               View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1");
             Console.WriteLine("   -n | --no-title             Do not write the \"created by mddox at date\" in the markdown file.");
+            Console.WriteLine("   -v | --verbose              Print some debug info when generating documentation.");
         }
 
         static CommandLineOptions Parse(string [] args)
@@ -131,6 +132,10 @@ namespace MdDox
                     case "-n":
                         options.ShowTitle = false;
                         break;
+                    case "--verbose":
+                    case "-v":
+                        options.Verbose = true;
+                        break;
                     default:
                         if (args[i].StartsWith("-"))
                         {
@@ -205,11 +210,18 @@ namespace MdDox
                             $" Similar type names in the assembly: {string.Join(",", possibleTypes)}");
                     }
                 }
-                DocumentationGenerator.GenerateMarkdown(rootType, 
-                    rootType == null ? myAssembly : null, options.Recursive, options.RecursiveAssemblies, 
-                    options.IgnoreAttributes, options.IgnoreMethods, 
-                    options.MsdnLinks, options.MsdnView, options.ShowTitle,
-                    writer, options.OutputFile);
+                DocumentationGenerator.GenerateMarkdown(
+                    rootType, 
+                    rootType == null ? myAssembly : null, 
+                    options.Recursive, 
+                    options.RecursiveAssemblies, 
+                    options.IgnoreAttributes, 
+                    options.IgnoreMethods, 
+                    options.MsdnLinks, options.MsdnView, 
+                    options.ShowTitle,
+                    options.Verbose,
+                    writer, 
+                    options.OutputFile);
             }
             catch (Exception exc)
             {
