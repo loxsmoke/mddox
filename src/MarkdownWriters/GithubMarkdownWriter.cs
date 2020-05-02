@@ -103,7 +103,7 @@ namespace MdDox.MarkdownWriters
         }
         public string HeadingLink(string anchorName, string text)
         {
-            return $"[{text}](#{anchorName.Replace(" ", "-").ToLower()})";
+            return $"[{text}](#{anchorName.ToLower().RegexReplace(@"[^a-z\d -]", "").Replace(" ", "-")})";
         }
         #endregion
 
