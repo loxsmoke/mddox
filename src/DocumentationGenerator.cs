@@ -453,13 +453,13 @@ namespace MdDox
             {
                 Writer.WriteH2("Constructors");
                 Writer.WriteTableTitle("Name", "Summary");
-                foreach (var prop in allMethods
+                foreach (var ctor in allMethods
                     .Where(m => m.Info is ConstructorInfo)
-                    .OrderBy(p => p.Info.GetParameters().Length))
+                    .OrderBy(m => m.Info.GetParameters().Length))
                 {
                     Writer.WriteTableRow(
-                        Writer.Bold(typeData.Type.ToNameString() + prop.Info.ToParametersString(typeLinkConverter, true)),
-                        prop.Comments.Summary);
+                        Writer.Bold(typeData.Type.ToNameString() + ctor.Info.ToParametersString(typeLinkConverter, true)),
+                        ProcessTags(ctor.Comments.Summary));
                 }
             }
 
@@ -469,14 +469,14 @@ namespace MdDox
                 Writer.WriteTableTitle("Name", "Returns", "Summary");
                 foreach (var method in allMethods
                     .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
-                    .OrderBy(p => p.Info.Name)
-                    .ThenBy(p => p.Info.GetParameters().Length))
+                    .OrderBy(m => m.Info.Name)
+                    .ThenBy(m => m.Info.GetParameters().Length))
                 {
                     var methodInfo = method.Info as MethodInfo;
                     Writer.WriteTableRow(
                         Writer.Bold(methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true)),
                         methodInfo.ToTypeNameString(typeLinkConverter, true),
-                        method.Comments.Summary);
+                        ProcessTags(method.Comments.Summary));
                 }
             }
 
