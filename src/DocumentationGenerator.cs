@@ -310,7 +310,7 @@ namespace MdDox
                     continue;
                 }
 
-                return text;
+                return RemoveParaTags(text);
             }
         }
 
@@ -340,6 +340,12 @@ namespace MdDox
             var url = $"https://docs.microsoft.com/{docLocale}/dotnet/api/{typeNameFragment}{urlParameters}";
             return url;
         }
+
+        static string RemoveParaTags(string text) => text?
+            .RegexReplace(@"\s*</para>\s*<para>\s*", "\r\n\r\n")
+            .RegexReplace(@"\s*<para>\s*", "\r\n\r\n")
+            .RegexReplace(@"\s*</para>\s*", "\r\n\r\n")
+            .Trim();
 
         /// <summary>
         /// Write table of contents. It is a three column table with each cell containing 
