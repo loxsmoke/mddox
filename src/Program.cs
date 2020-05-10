@@ -186,7 +186,12 @@ namespace MdDox
 
             try
             {
-                var myAssembly = Assembly.LoadFrom(options.AssemblyName);
+                if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
+
+                var fullAssemblyName = Path.GetFullPath(options.AssemblyName);
+                if (options.Verbose) Console.WriteLine($"Full assembly file name: \"{fullAssemblyName}\"");
+
+                var myAssembly = Assembly.LoadFile(fullAssemblyName);
                 if (myAssembly == null)
                 {
                     throw new Exception($"Could not load assembly \'{options.AssemblyName}\'");
@@ -211,17 +216,24 @@ namespace MdDox
                     }
                 }
                 DocumentationGenerator.GenerateMarkdown(
-                    rootType, 
-                    rootType == null ? myAssembly : null, 
-                    options.Recursive, 
-                    options.RecursiveAssemblies, 
-                    options.IgnoreAttributes, 
-                    options.IgnoreMethods, 
-                    options.MsdnLinks, options.MsdnView, 
+                    rootType,
+                    rootType == null ? myAssembly : null,
+                    options.Recursive,
+                    options.RecursiveAssemblies,
+                    options.IgnoreAttributes,
+                    options.IgnoreMethods,
+                    options.MsdnLinks, options.MsdnView,
                     options.ShowTitle,
                     options.Verbose,
-                    writer, 
+                    writer,
                     options.OutputFile);
+            }
+            catch (BadImageFormatException exc)
+            {
+                Console.WriteLine($"Error: {exc.Message}");
+                Console.WriteLine($"Hresult:{exc.HResult}");
+                if (!string.IsNullOrEmpty(exc.HelpLink)) Console.WriteLine($"Help link: {exc.HelpLink}");
+                Console.WriteLine($"{exc.StackTrace}");
             }
             catch (Exception exc)
             {

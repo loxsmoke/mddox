@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Authors>LoxSmoke</Authors>
     <Product>mddox</Product>
     <PackageId>LoxSmoke.mddox</PackageId>
-    <Version>0.5.2</Version>
+    <Version>0.5.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Copyright>Copyright 2019-2020 LoxSmoke</Copyright>
     <PackageProjectUrl>https://github.com/loxsmoke/mddox</PackageProjectUrl>
@@ -14,32 +13,26 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>markdown xml documentation docxml loxsmoke mddox</PackageTags>
     <Description>Simple Markdown documentation generator</Description>
-
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>mddox</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <AssemblyVersion>0.5.2.0</AssemblyVersion>
-    <FileVersion>0.5.2.0</FileVersion>
+    <AssemblyVersion>0.5.3.0</AssemblyVersion>
+    <FileVersion>0.5.3.0</FileVersion>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile></DocumentationFile>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile></DocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="LoxSmoke.DocXml" Version="3.4.2" />
+    <PackageReference Include="LoxSmoke.DocXml" Version="3.4.3" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-
 </Project>
