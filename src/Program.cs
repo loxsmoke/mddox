@@ -186,10 +186,13 @@ namespace MdDox
 
             try
             {
+                if (options.Verbose) AppDomain.CurrentDomain.AssemblyLoad += ShowAssemblyLoaded;
+                AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => ResolveAssembly(sender, args, options.Verbose);
+                
                 if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
 
                 var fullAssemblyName = Path.GetFullPath(options.AssemblyName);
-                if (options.Verbose) Console.WriteLine($"Full assembly file name: \"{fullAssemblyName}\"");
+                if (options.Verbose) Console.WriteLine($"Document full assembly file name: \"{fullAssemblyName}\"");
 
                 var myAssembly = Assembly.LoadFile(fullAssemblyName);
                 if (myAssembly == null)
@@ -240,6 +243,33 @@ namespace MdDox
                 Console.WriteLine($"Error: {exc.Message}");
                 Console.WriteLine($"{exc.StackTrace}");
             }
+        }
+
+        private static HashSet<string> RequestedAssemblies { get; set; } = new HashSet<string>();
+
+        private static Assembly ResolveAssembly(object sender, ResolveEventArgs args, bool verbose)
+        {
+            // Avoid stack overflow
+            if (RequestedAssemblies.Contains(args.Name)) return null;
+            RequestedAssemblies.Add(args.Name);
+            var fullAssemblyName = Path.GetFullPath(args.Name.Split(',').First()) + ".dll";
+
+            if (verbose)
+            {
+                Console.WriteLine($"Resolving: {args.Name}");
+                Console.WriteLine($"Requested by: {args.RequestingAssembly}");
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Console.WriteLine("  Already loaded: " + a.FullName);
+                }
+                Console.WriteLine("Loading: " + fullAssemblyName);
+            }
+            return Assembly.LoadFile(fullAssemblyName);
+        }
+
+        private static void ShowAssemblyLoaded(object sender, AssemblyLoadEventArgs args)
+        {
+            Console.WriteLine("Loaded assembly: " + args.LoadedAssembly.FullName);
         }
     }
 }
