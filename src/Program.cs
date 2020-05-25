@@ -186,13 +186,14 @@ namespace MdDox
 
             try
             {
-                if (options.Verbose) AppDomain.CurrentDomain.AssemblyLoad += ShowAssemblyLoaded;
-                AppDomain.CurrentDomain.AssemblyResolve += (sender, args) => ResolveAssembly(sender, args, options.Verbose);
-                
                 if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
 
                 var fullAssemblyName = Path.GetFullPath(options.AssemblyName);
                 if (options.Verbose) Console.WriteLine($"Document full assembly file name: \"{fullAssemblyName}\"");
+
+                if (options.Verbose) AppDomain.CurrentDomain.AssemblyLoad += ShowAssemblyLoaded;
+                AppDomain.CurrentDomain.AssemblyResolve += 
+                    (sender, args) => ResolveAssembly(sender, args, options.Verbose, Path.GetDirectoryName(fullAssemblyName));
 
                 var myAssembly = Assembly.LoadFile(fullAssemblyName);
                 if (myAssembly == null)
@@ -247,17 +248,21 @@ namespace MdDox
 
         private static HashSet<string> RequestedAssemblies { get; set; } = new HashSet<string>();
 
-        private static Assembly ResolveAssembly(object sender, ResolveEventArgs args, bool verbose)
+        private static Assembly ResolveAssembly(object sender, ResolveEventArgs args, bool verbose, string basePath)
         {
             // Avoid stack overflow
             if (RequestedAssemblies.Contains(args.Name)) return null;
             RequestedAssemblies.Add(args.Name);
-            var fullAssemblyName = Path.GetFullPath(args.Name.Split(',').First()) + ".dll";
+            var fullAssemblyName = Path.GetFullPath(args.Name.Split(',').First() + ".dll", basePath);
 
             if (verbose)
             {
                 Console.WriteLine($"Resolving: {args.Name}");
-                Console.WriteLine($"Requested by: {args.RequestingAssembly}");
+                if (args.RequestingAssembly != null)
+                {
+                    Console.WriteLine($"Requested by: {args.RequestingAssembly}");
+                    Console.WriteLine($"Requested by: {args.RequestingAssembly.Location}");
+                }
                 foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     Console.WriteLine("  Already loaded: " + a.FullName);

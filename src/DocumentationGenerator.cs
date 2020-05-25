@@ -214,7 +214,7 @@ namespace MdDox
 
         public static void Log(Type type, string message)
         {
-            Console.WriteLine("  " + message + type.ToNameString());
+            Console.WriteLine("  " + message + type.Namespace + "." +  type.ToNameString());
         }
 
         public static bool AssemblyFilter(
@@ -243,7 +243,7 @@ namespace MdDox
             }
             if (File.Exists(Path.ChangeExtension(assembly.Location, ".xml"))) return true;
             if (!verbose) return false;
-            Log(assembly, "No xml file for assemblu. Ignoring ");
+            Log(assembly, "No xml file for the assembly. Ignoring ");
             return false;
         }
 
