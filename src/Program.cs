@@ -11,6 +11,7 @@ using MdDox.MarkdownWriters.Interfaces;
 using DocXml.Reflection;
 using LoxSmoke.DocXml;
 using LoxSmoke.DocXml.Reflection;
+using System.ComponentModel.DataAnnotations;
 
 namespace MdDox
 {
@@ -246,13 +247,15 @@ namespace MdDox
             }
         }
 
-        private static HashSet<string> RequestedAssemblies { get; set; } = new HashSet<string>();
+        private static Dictionary<string, Assembly> RequestedAssemblies { get; set; } = new Dictionary<string, Assembly>();
 
         private static Assembly ResolveAssembly(object sender, ResolveEventArgs args, bool verbose, string basePath)
         {
+            var shortAssemblyName = args.Name.Split(',').First();
+
             // Avoid stack overflow
-            if (RequestedAssemblies.Contains(args.Name)) return null;
-            RequestedAssemblies.Add(args.Name);
+            if (RequestedAssemblies.ContainsKey(shortAssemblyName)) return RequestedAssemblies[shortAssemblyName];
+            RequestedAssemblies.Add(shortAssemblyName, null);
             var fullAssemblyName = Path.GetFullPath(args.Name.Split(',').First() + ".dll", basePath);
 
             if (verbose)
@@ -269,7 +272,9 @@ namespace MdDox
                 }
                 Console.WriteLine("Loading: " + fullAssemblyName);
             }
-            return Assembly.LoadFile(fullAssemblyName);
+            var assembly = Assembly.LoadFile(fullAssemblyName);
+            RequestedAssemblies[shortAssemblyName] = assembly;
+            return assembly;
         }
 
         private static void ShowAssemblyLoaded(object sender, AssemblyLoadEventArgs args)
