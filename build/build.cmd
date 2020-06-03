@@ -7,7 +7,7 @@ set PACKAGE_VERSION=%1
 if not "%1"=="" goto endif0
 echo ERROR: Missing version number parameter
 exit
-endif0
+:endif0
 if "%2"=="" goto endif1
 set PACKAGE_VERSION=%1-%2
 :endif1
