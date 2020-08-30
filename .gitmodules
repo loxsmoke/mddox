@@ -1,0 +1,3 @@
+[submodule "DocXml"]
+	path = DocXml
+	url = https://github.com/loxsmoke/DocXml.git
