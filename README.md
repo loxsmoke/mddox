@@ -40,10 +40,12 @@ Short format | Long format | Comment
 | -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors. |
 | -**a** name  | --**ignore-attribute** name | Do not generate documentation for properties with specified custom attribute. For example  JsonIgnoreAttribute<br> This parameter can be used multiple times to specify multiple sttributes. |
 | -**t** name  | --**type** name         | Document only this type and all types referenced by this type. |
-| -**d** [view]  | --**msdn** [view]       | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1 |  
+| -**s** [view]  | --**msdn** [view]       | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1 |  
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
 | -**v**  | --**verbose**             | Print some debug info when generating documentation. It may help troubleshooting some issues such as missing type information of referenced assemblies. |
   
+For best result enable XML documentation build switch in your project and use publish build to get all references assemblies in one folder.
+
 Documenting all types of one assembly
 
 ```bash
