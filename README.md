@@ -44,7 +44,7 @@ Short format | Long format | Comment
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
 | -**v**  | --**verbose**             | Print some debug info when generating documentation. It may help troubleshooting some issues such as missing type information of referenced assemblies. |
   
-For best result enable XML documentation build switch in your project and use publish build to get all references assemblies in one folder.
+For best results enable XML documentation build switch in your project and use publish build to get all referenced assemblies in one folder.
 
 Documenting all types of one assembly
 
