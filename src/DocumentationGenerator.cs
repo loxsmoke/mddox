@@ -50,7 +50,9 @@ namespace MdDox
             {
                 if (TypesToDocumentSet.Contains(type))
                 {
-                    return Writer.HeadingLink(TypeTitle(type), type.ToNameString());
+                    return type.IsGenericTypeDefinition ?
+                        Writer.HeadingLink(TypeTitle(type), type.Name.CleanGenericTypeName()) :
+                        Writer.HeadingLink(TypeTitle(type), type.ToNameString());
                 }
                 if (msdnLinks &&
                     type != typeof(string) &&
