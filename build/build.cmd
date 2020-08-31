@@ -16,6 +16,6 @@ pushd ..\src
 dotnet-property mddox.csproj Version:%PACKAGE_VERSION%
 dotnet-property mddox.csproj AssemblyVersion:%1.0
 dotnet-property mddox.csproj FileVersion:%1.0
-dotnet build -c Release
+dotnet build mddox.csproj -c Release
 popd
 move ..\src\nupkg\LoxSmoke.mddox.%PACKAGE_VERSION%.nupkg

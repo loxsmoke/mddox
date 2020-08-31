@@ -56,7 +56,7 @@ namespace MdDox
                 }
                 if (msdnLinks &&
                     type != typeof(string) &&
-                    !type.IsValueType &&
+                    (!type.IsValueType || type.IsEnum) &&
                     (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
                     type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
                 {
@@ -274,10 +274,11 @@ namespace MdDox
             return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
         }
 
-        static (string cref, string innerText, string beforeText, string afterText) FindTagWithCref(string text, string tag)
+        static (string cref, string innerText, string beforeText, string afterText) FindTagWithAttribute(
+            string text, string tag, string attributeName)
         {
             if (string.IsNullOrEmpty(text) || !text.Contains(tag)) return (null, null, text, null);
-            var simpleTag = new Regex("<" + tag + "( +)cref( *)=( *)\"(.*?)\"( *)/>");
+            var simpleTag = new Regex("<" + tag + "( +)" + attributeName + "( *)=( *)\"(.*?)\"( *)/>");
             var match = simpleTag.Match(text);
             if (match.Success)
             {
@@ -285,11 +286,11 @@ namespace MdDox
                     text.Substring(match.Index + match.Length));
             }
 
-            var bigTag = new Regex("<" + tag + "( +)cref( *)=( *)\"(.*?)\"( *)>(.*?)</" + tag + ">");
+            var bigTag = new Regex("<" + tag + "( +)"+ attributeName + "( *)=( *)\"(.*?)\"( *)>(.*?)</" + tag + ">");
             match = bigTag.Match(text);
             if (match.Success)
             {
-                return (match.Groups[4].Value, "", text.Substring(0, match.Index),
+                return (match.Groups[4].Value, match.Groups[6].Value, text.Substring(0, match.Index),
                     text.Substring(match.Index + match.Length));
             }
             return (null, null, text, null);
@@ -299,16 +300,22 @@ namespace MdDox
         {
             for (; ; )
             {
-                var (cref, innerText, beforeText, afterText) = FindTagWithCref(text, "seealso");
+                var (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "seealso", "cref");
                 if (cref != null)
                 {
                     text = beforeText + "**" + FixCref(cref) + "**" + afterText;
                     continue;
                 }
-                (cref, innerText, beforeText, afterText) = FindTagWithCref(text, "see");
+                (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "cref");
                 if (cref != null)
                 {
                     text = beforeText + "**" + FixCref(cref) + "**" + afterText;
+                    continue;
+                }
+                (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "href");
+                if (cref != null)
+                {
+                    text = beforeText + $" [{innerText}]({cref}) " + afterText;
                     continue;
                 }
 
