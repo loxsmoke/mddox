@@ -52,7 +52,7 @@ namespace MdDox
             Console.WriteLine("                               For example JsonIgnoreAttribute");
             Console.WriteLine("                               This parameter can be used multiple times to specify multiple sttributes.");
             Console.WriteLine("   -t | --type <name>          Document only this type and all types referenced by this type.");
-            Console.WriteLine("   -d | --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types.");
+            Console.WriteLine("   -s | --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types.");
             Console.WriteLine("                               The documentation pages are located at this site https://docs.microsoft.com");
             Console.WriteLine("                               View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1");
             Console.WriteLine("   -n | --no-title             Do not write the \"created by mddox at date\" in the markdown file.");

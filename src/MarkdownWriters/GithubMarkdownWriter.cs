@@ -28,11 +28,11 @@ namespace MdDox.MarkdownWriters
         #region Formatted writing
         public void WriteH1(string text)
         {
-            WriteLine("# " + text);
+            WriteLine("# " + EscapeSpecialChars(text));
         }
         public void WriteH2(string text)
         {
-            WriteLine("## " + text);
+            WriteLine("## " + EscapeSpecialChars(text));
         }
         public void WriteLink(string anchorName, string text)
         {

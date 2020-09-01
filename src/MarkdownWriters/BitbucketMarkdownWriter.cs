@@ -28,13 +28,13 @@ namespace MdDox.MarkdownWriters
         public void WriteH1(string text)
         {
             allText.AppendLine();
-            WriteLine("# " + text);
+            WriteLine("# " + EscapeSpecialChars(text));
         }
 
         public void WriteH2(string text)
         {
             allText.AppendLine();
-            WriteLine("## " + text);
+            WriteLine("## " + EscapeSpecialChars(text));
         }
         public void WriteLink(string anchorName, string text)
         {
