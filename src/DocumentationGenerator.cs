@@ -21,13 +21,15 @@ namespace MdDox
         public List<TypeCollection.TypeInformation> TypesToDocument { get; }
         public HashSet<Type> TypesToDocumentSet { get; set; }
         private Func<Type, Queue<string>, string> typeLinkConverter;
+        private bool MethodDetails { get; set; }
 
         public DocumentationGenerator(
             IMarkdownWriter writer,
             TypeCollection typeCollection,
             Type firstType = null,
             bool msdnLinks = false,
-            string msdnView = null)
+            string msdnView = null,
+            bool methodDetails = false)
         {
             Reader = new DocXmlReader();
             Writer = writer;
@@ -69,6 +71,7 @@ namespace MdDox
                 }
                 return null;
             };
+            MethodDetails = methodDetails;
         }
 
         public static void GenerateMarkdown(
@@ -77,13 +80,14 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
+            bool methodDetails,
             bool recursive,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
             bool verbose)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, verbose,
+            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, methodDetails, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -93,13 +97,14 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
+            bool methodDetails,
             bool recursive,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
             bool verbose)
         {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, msdnLinks, msdnView, showDateLine, verbose,
+            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, methodDetails, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -129,6 +134,7 @@ namespace MdDox
             List<string> recursiveAssemblies,
             List<string> ignoreAttributes,
             bool ignoreMethods,
+            bool methodDetails,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
@@ -161,7 +167,7 @@ namespace MdDox
                 TypeCollection.ForReferencedTypes(rootType, reflectionSettings);
 
             // Generate markdown
-            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView);
+            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView, methodDetails);
             if (assembly != null) generator.WriteDocumentTitle(assembly);
             if (showDateLine) generator.WritedDateLine();
             generator.WriteTypeIndex();
@@ -488,8 +494,10 @@ namespace MdDox
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
                     var methodInfo = method.Info as MethodInfo;
+                    var heading = methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true);
+                    heading = MethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
-                        Writer.Bold(methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true)),
+                        heading,
                         methodInfo.ToTypeNameString(typeLinkConverter, true),
                         ProcessTags(method.Comments.Summary));
                 }
@@ -505,6 +513,30 @@ namespace MdDox
                         Writer.Bold(field.Info.Name),
                         field.Info.ToTypeNameString(typeLinkConverter, true),
                         ProcessTags(field.Comments.Summary));
+                }
+            }
+            
+            if (MethodDetails && allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
+            {
+                Writer.WriteLine("&nbsp;");
+                Writer.WriteH2("Methods");
+                Writer.WriteLine("#");
+                foreach (var (info, comments) in allMethods
+                    .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
+                    .OrderBy(m => m.Info.Name)
+                    .ThenBy(m => m.Info.GetParameters().Length))
+                {
+                    Writer.WriteLine("&nbsp;");
+                    Writer.WriteH2(info.Name + info.ToParametersString(typeLinkConverter, true));
+                    Writer.WriteLine(comments.Summary);
+                    if (comments.Parameters.Count > 0)
+                    {
+                        Writer.WriteTableTitle("Param",  "Description");
+                        foreach (var (name, text) in comments.Parameters)
+                        {
+                            Writer.WriteTableRow(name, text);
+                        }                        
+                    }
                 }
             }
         }

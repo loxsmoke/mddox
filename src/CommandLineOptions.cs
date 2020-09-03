@@ -11,6 +11,7 @@ namespace MdDox
         public string OutputFile { get; set; } 
         public string Format { get; set; }
         public bool IgnoreMethods { get; set; }
+        public bool MethodDetails { get; set; }
         public List<string> IgnoreAttributes { get; set; } = new List<string>();
         public bool Recursive { get; set; }
         public List<string> RecursiveAssemblies { get; set; } = new List<string>();
