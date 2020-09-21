@@ -46,6 +46,11 @@ namespace MdDox.MarkdownWriters
         {
             allText.Append($"<a name=\"{anchorName}\"></a>");
         }
+        public void WriteHorizontalRule()
+        {
+            allText.AppendLine();
+            WriteLine("---");
+        }
         #endregion
 
         #region Tables

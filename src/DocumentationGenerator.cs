@@ -518,15 +518,12 @@ namespace MdDox
             
             if (MethodDetails && allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
             {
-                Writer.WriteLine("&nbsp;");
                 Writer.WriteH2("Methods");
-                Writer.WriteLine("#");
                 foreach (var (info, comments) in allMethods
                     .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
                     .OrderBy(m => m.Info.Name)
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
-                    Writer.WriteLine("&nbsp;");
                     Writer.WriteH2(info.Name + info.ToParametersString(typeLinkConverter, true));
                     Writer.WriteLine(comments.Summary);
                     if (comments.Parameters.Count > 0)

@@ -19,6 +19,7 @@ namespace MdDox.MarkdownWriters.Interfaces
         void WriteLink(string anchorName, string text);
         void WriteHeadingLink(string text);
         void WriteAnchor(string anchorName);
+        void WriteHorizontalRule();
         string Bold(string text);
         string Link(string anchorName, string text);
         string HeadingLink(string anchorName, string text = null);
