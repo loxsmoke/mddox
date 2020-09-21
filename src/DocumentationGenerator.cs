@@ -456,7 +456,6 @@ namespace MdDox
             var allProperties = Reader.Comments(typeData.Properties).ToList();
             var allMethods = Reader.Comments(typeData.Methods).ToList();
             var allFields = Reader.Comments(typeData.Fields).ToList();
-
             if (allProperties.Count > 0)
             {
                 Writer.WriteH2("Properties");
@@ -478,8 +477,10 @@ namespace MdDox
                     .Where(m => m.Info is ConstructorInfo)
                     .OrderBy(m => m.Info.GetParameters().Length))
                 {
+                    var heading = typeData.Type.ToNameString() + ctor.Info.ToParametersString(typeLinkConverter, true);
+                    heading = MethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
-                        Writer.Bold(typeData.Type.ToNameString() + ctor.Info.ToParametersString(typeLinkConverter, true)),
+                        heading,
                         ProcessTags(ctor.Comments.Summary));
                 }
             }
@@ -515,25 +516,43 @@ namespace MdDox
                         ProcessTags(field.Comments.Summary));
                 }
             }
-            
-            if (MethodDetails && allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
+
+            if (MethodDetails)
             {
-                Writer.WriteH2("Methods");
-                foreach (var (info, comments) in allMethods
-                    .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
-                    .OrderBy(m => m.Info.Name)
-                    .ThenBy(m => m.Info.GetParameters().Length))
+                if (allMethods.Count > 0 && allMethods.Any(m => m.Info is ConstructorInfo))
                 {
-                    Writer.WriteH2(info.Name + info.ToParametersString(typeLinkConverter, true));
-                    Writer.WriteLine(comments.Summary);
-                    if (comments.Parameters.Count > 0)
+                    Writer.WriteH2("Constructors");
+                    foreach (var (info, comments) in allMethods
+                        .Where(m => m.Info is ConstructorInfo)
+                        .OrderBy(m => m.Info.GetParameters().Length))
                     {
-                        Writer.WriteTableTitle("Param",  "Description");
-                        foreach (var (name, text) in comments.Parameters)
-                        {
-                            Writer.WriteTableRow(name, text);
-                        }                        
+                        WriteMethodDetails(typeData.Type.ToNameString(), info, comments);
                     }
+                }
+                if (allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
+                {
+                    Writer.WriteH2("Methods");
+                    foreach (var (info, comments) in allMethods
+                        .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
+                        .OrderBy(m => m.Info.Name)
+                        .ThenBy(m => m.Info.GetParameters().Length))
+                    {
+                        WriteMethodDetails(info.Name, info, comments);
+                    }
+                }
+            }
+        }
+
+        private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
+        {
+            Writer.WriteH2(name + info.ToParametersString(typeLinkConverter, true));
+            Writer.WriteLine(comments.Summary);
+            if (comments.Parameters.Count > 0)
+            {
+                Writer.WriteTableTitle("Param", "Description");
+                foreach (var (paramName, text) in comments.Parameters)
+                {
+                    Writer.WriteTableRow(paramName, text);
                 }
             }
         }
