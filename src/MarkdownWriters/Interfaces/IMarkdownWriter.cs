@@ -12,6 +12,7 @@ namespace MdDox.MarkdownWriters.Interfaces
 
         void WriteH1(string text);
         void WriteH2(string text);
+        void WriteH3(string text);
 
 
         void WriteTableTitle(params string[] tableHeadings);

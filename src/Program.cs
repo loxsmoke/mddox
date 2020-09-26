@@ -47,7 +47,8 @@ namespace MdDox
             Console.WriteLine("   -r | --recursive <assembly> Step recursivelly only into specified assembly or assemblies.");
             Console.WriteLine("                               This parameter can be used multiple times to specify multiple assemblies.");
             Console.WriteLine("   -m | --ignore-methods       Do not generate documentation for methods and constructors.");
-            Console.WriteLine("   -M | --method-details      Generate detailed documentation for methods and constructors.");
+            Console.WriteLine("   -d | --method-details       Generate detailed documentation for methods and constructors.");
+            Console.WriteLine("                               Setting has no effect if --ignore-methods is specified.");
             Console.WriteLine("   -a | --ignore-attribute <name> ");
             Console.WriteLine("                               Do not generate documentation for properties with specified custom attribute.");
             Console.WriteLine("                               For example JsonIgnoreAttribute");
@@ -91,10 +92,11 @@ namespace MdDox
                     case "--ignore-methods":
                     case "-m":
                         options.IgnoreMethods = true;
+                        options.DocumentMethodDetails = false;
                         break;
                     case "--method-details":
-                    case "-M":
-                        options.MethodDetails = true;
+                    case "-d":
+                        if (!options.IgnoreMethods) options.DocumentMethodDetails = true;
                         break;
                     case "--ignore-attribute":
                     case "-a":
@@ -232,7 +234,7 @@ namespace MdDox
                     options.RecursiveAssemblies,
                     options.IgnoreAttributes,
                     options.IgnoreMethods,
-                    options.MethodDetails,
+                    options.DocumentMethodDetails,
                     options.MsdnLinks, options.MsdnView,
                     options.ShowTitle,
                     options.Verbose,

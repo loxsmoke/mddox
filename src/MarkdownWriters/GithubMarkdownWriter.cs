@@ -34,6 +34,12 @@ namespace MdDox.MarkdownWriters
         {
             WriteLine("## " + EscapeSpecialChars(text));
         }
+
+        public void WriteH3(string text)
+        {
+            WriteLine("### " + EscapeSpecialChars(text));
+        }
+
         public void WriteLink(string anchorName, string text)
         {
             allText.Append(Link(anchorName, text));

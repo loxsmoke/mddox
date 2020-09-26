@@ -8,10 +8,10 @@ namespace MdDox
     {
         public string AssemblyName { get; set; }
         public string TypeName { get; set; }  
-        public string OutputFile { get; set; } 
+        public string OutputFile { get; set; }
         public string Format { get; set; }
         public bool IgnoreMethods { get; set; }
-        public bool MethodDetails { get; set; }
+        public bool DocumentMethodDetails { get; set; }
         public List<string> IgnoreAttributes { get; set; } = new List<string>();
         public bool Recursive { get; set; }
         public List<string> RecursiveAssemblies { get; set; } = new List<string>();

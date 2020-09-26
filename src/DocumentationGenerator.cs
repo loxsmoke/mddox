@@ -21,7 +21,7 @@ namespace MdDox
         public List<TypeCollection.TypeInformation> TypesToDocument { get; }
         public HashSet<Type> TypesToDocumentSet { get; set; }
         private Func<Type, Queue<string>, string> typeLinkConverter;
-        private bool MethodDetails { get; set; }
+        private bool DocumentMethodDetails { get; set; }
 
         public DocumentationGenerator(
             IMarkdownWriter writer,
@@ -29,7 +29,7 @@ namespace MdDox
             Type firstType = null,
             bool msdnLinks = false,
             string msdnView = null,
-            bool methodDetails = false)
+            bool documentMethodDetails = false)
         {
             Reader = new DocXmlReader();
             Writer = writer;
@@ -71,7 +71,7 @@ namespace MdDox
                 }
                 return null;
             };
-            MethodDetails = methodDetails;
+            DocumentMethodDetails = documentMethodDetails;
         }
 
         public static void GenerateMarkdown(
@@ -80,14 +80,14 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
-            bool methodDetails,
+            bool documentMethodDetails,
             bool recursive,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
             bool verbose)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, methodDetails, msdnLinks, msdnView, showDateLine, verbose,
+            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, documentMethodDetails, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -97,14 +97,14 @@ namespace MdDox
             string outputFileName,
             List<string> ignoreAttributes,
             bool ignoreMethods,
-            bool methodDetails,
+            bool documentMethodDetails,
             bool recursive,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
             bool verbose)
         {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, methodDetails, msdnLinks, msdnView, showDateLine, verbose,
+            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, documentMethodDetails, msdnLinks, msdnView, showDateLine, verbose,
                 writer, outputFileName);
         }
 
@@ -134,7 +134,7 @@ namespace MdDox
             List<string> recursiveAssemblies,
             List<string> ignoreAttributes,
             bool ignoreMethods,
-            bool methodDetails,
+            bool documentMethodDetails,
             bool msdnLinks,
             string msdnView,
             bool showDateLine,
@@ -167,11 +167,11 @@ namespace MdDox
                 TypeCollection.ForReferencedTypes(rootType, reflectionSettings);
 
             // Generate markdown
-            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView, methodDetails);
+            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView, documentMethodDetails);
             if (assembly != null) generator.WriteDocumentTitle(assembly);
             if (showDateLine) generator.WritedDateLine();
             generator.WriteTypeIndex();
-            generator.DocumentTypes();
+            generator.WriteDocumentationForTypes();
 
             // Write markdown to the output file
             File.WriteAllText(outputFileName, generator.Writer.FullText);
@@ -389,7 +389,7 @@ namespace MdDox
         /// Examples, Remarks, 
         /// </summary>
         /// <param name="enumType"></param>
-        public void DocumentEnum(Type enumType)
+        public void WriteEnumDocumentation(Type enumType)
         {
             Writer.WriteH1(TypeTitle(enumType));
             Writer.WriteLine("Namespace: " + enumType.Namespace);
@@ -426,7 +426,7 @@ namespace MdDox
         /// Base class,  summary, remarks, Properties, constructors, methods and fields
         /// </summary>
         /// <param name="typeData"></param>
-        public void DocumentClass(TypeCollection.TypeInformation typeData)
+        public void WriteClassDocumentation(TypeCollection.TypeInformation typeData)
         {
             Writer.WriteH1(TypeTitle(typeData.Type));
             Writer.WriteLine("Namespace: " + typeData.Type.Namespace);
@@ -454,7 +454,9 @@ namespace MdDox
             }
 
             var allProperties = Reader.Comments(typeData.Properties).ToList();
-            var allMethods = Reader.Comments(typeData.Methods).ToList();
+            var allConstructors = Reader.Comments(typeData.Methods.Where(it => it is ConstructorInfo)).ToList();
+            var allMethods = Reader.Comments(typeData.Methods
+                .Where(it => !(it is ConstructorInfo) && (it is MethodInfo))).ToList();
             var allFields = Reader.Comments(typeData.Fields).ToList();
             if (allProperties.Count > 0)
             {
@@ -469,34 +471,31 @@ namespace MdDox
                 }
             }
 
-            if (allMethods.Count > 0 && allMethods.Any(m => m.Info is ConstructorInfo))
+            if (allConstructors.Count > 0)
             {
                 Writer.WriteH2("Constructors");
                 Writer.WriteTableTitle("Name", "Summary");
-                foreach (var ctor in allMethods
-                    .Where(m => m.Info is ConstructorInfo)
-                    .OrderBy(m => m.Info.GetParameters().Length))
+                foreach (var ctor in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
                     var heading = typeData.Type.ToNameString() + ctor.Info.ToParametersString(typeLinkConverter, true);
-                    heading = MethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
+                    heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
                         heading,
                         ProcessTags(ctor.Comments.Summary));
                 }
             }
 
-            if (allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
+            if (allMethods.Count > 0)
             {
                 Writer.WriteH2("Methods");
                 Writer.WriteTableTitle("Name", "Returns", "Summary");
                 foreach (var method in allMethods
-                    .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
                     .OrderBy(m => m.Info.Name)
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
                     var methodInfo = method.Info as MethodInfo;
                     var heading = methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true);
-                    heading = MethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
+                    heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
                         heading,
                         methodInfo.ToTypeNameString(typeLinkConverter, true),
@@ -517,23 +516,21 @@ namespace MdDox
                 }
             }
 
-            if (MethodDetails)
+            if (DocumentMethodDetails)
             {
-                if (allMethods.Count > 0 && allMethods.Any(m => m.Info is ConstructorInfo))
+                if (allConstructors.Count > 0)
                 {
                     Writer.WriteH2("Constructors");
-                    foreach (var (info, comments) in allMethods
-                        .Where(m => m.Info is ConstructorInfo)
+                    foreach (var (info, comments) in allConstructors
                         .OrderBy(m => m.Info.GetParameters().Length))
                     {
                         WriteMethodDetails(typeData.Type.ToNameString(), info, comments);
                     }
                 }
-                if (allMethods.Count > 0 && allMethods.Any(m => m.Info is MethodInfo))
+                if (allMethods.Count > 0)
                 {
                     Writer.WriteH2("Methods");
                     foreach (var (info, comments) in allMethods
-                        .Where(m => m.Info != null && !(m.Info is ConstructorInfo) && (m.Info is MethodInfo))
                         .OrderBy(m => m.Info.Name)
                         .ThenBy(m => m.Info.GetParameters().Length))
                     {
@@ -545,28 +542,40 @@ namespace MdDox
 
         private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
         {
-            Writer.WriteH2(name + info.ToParametersString(typeLinkConverter, true));
+            Writer.WriteH3(name + info.ToParametersString(typeLinkConverter, true));
             Writer.WriteLine(comments.Summary);
             if (comments.Parameters.Count > 0)
             {
-                Writer.WriteTableTitle("Param", "Description");
+                var parameters = info.GetParameters();
+                var i = 0;
+                Writer.WriteTableTitle("Parameter", "Type", "Description");
                 foreach (var (paramName, text) in comments.Parameters)
                 {
-                    Writer.WriteTableRow(paramName, text);
+                    Writer.WriteTableRow(paramName,
+                        parameters[i++].ToTypeNameString(typeLinkConverter, true),
+                        ProcessTags(text));
                 }
+            }
+            Writer.WriteLine("");
+
+            if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
+            {
+                Writer.WriteH3("Returns");
+                Writer.WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
+                Writer.WriteLine(ProcessTags(comments.Returns));
             }
         }
 
-        public void DocumentTypes()
+        public void WriteDocumentationForTypes()
         {
             foreach (var typeData in TypesToDocument)
             {
                 if (typeData.Type.IsEnum)
                 {
-                    DocumentEnum(typeData.Type);
+                    WriteEnumDocumentation(typeData.Type);
                     continue;
                 }
-                DocumentClass(typeData);
+                WriteClassDocumentation(typeData);
             }
         }
     }
