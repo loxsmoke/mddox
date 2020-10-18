@@ -439,7 +439,7 @@ namespace MdDox
             }
 
             var typeComments = Reader.GetTypeComments(typeData.Type);
-            Writer.WriteLine(typeComments.Summary);
+            Writer.WriteLine(ProcessTags(typeComments.Summary));
 
             if (!string.IsNullOrEmpty(typeComments.Example))
             {
@@ -543,7 +543,7 @@ namespace MdDox
         private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
         {
             Writer.WriteH3(name + info.ToParametersString(typeLinkConverter, true));
-            Writer.WriteLine(comments.Summary);
+            Writer.WriteLine(ProcessTags(comments.Summary));
             if (comments.Parameters.Count > 0)
             {
                 var parameters = info.GetParameters();
