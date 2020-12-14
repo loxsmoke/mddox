@@ -564,6 +564,12 @@ namespace MdDox
                 Writer.WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
                 Writer.WriteLine(ProcessTags(comments.Returns));
             }
+
+            if (!string.IsNullOrEmpty(comments.Example))
+            {
+                Writer.WriteH2("Examples");
+                Writer.WriteLine(ProcessTags(comments.Example));
+            }
         }
 
         public void WriteDocumentationForTypes()
