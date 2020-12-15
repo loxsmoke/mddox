@@ -133,12 +133,12 @@ namespace MdDox
                         options.MsdnLinks = true;
                         if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
                         {
-                            options.MsdnView = args[++i];
+                            options.MsdnLinkViewParameter = args[++i];
                         }
                         break;
                     case "--no-title":
                     case "-n":
-                        options.ShowTitle = false;
+                        options.ShowDocumentDateTime = false;
                         break;
                     case "--verbose":
                     case "-v":
@@ -227,25 +227,34 @@ namespace MdDox
                             $" Similar type names in the assembly: {string.Join(",", possibleTypes)}");
                     }
                 }
+                var assembly = rootType == null ? myAssembly : null;
+                var typeList = OrderedTypeList.LoadTypes(
+                    rootType, 
+                    assembly, 
+                    options.Recursive, 
+                    options.RecursiveAssemblies, 
+                    options.IgnoreAttributes, 
+                    options.IgnoreMethods, 
+                    options.Verbose);
+
+                var documentTitle = assembly != null ? $"{Path.GetFileName(assembly.ManifestModule.Name)} v.{assembly.GetName().Version} API documentation" : null;
                 DocumentationGenerator.GenerateMarkdown(
-                    rootType,
-                    rootType == null ? myAssembly : null,
-                    options.Recursive,
-                    options.RecursiveAssemblies,
-                    options.IgnoreAttributes,
-                    options.IgnoreMethods,
+                    typeList,
+                    documentTitle,
+                    options.ShowDocumentDateTime,
                     options.DocumentMethodDetails,
-                    options.MsdnLinks, options.MsdnView,
-                    options.ShowTitle,
-                    options.Verbose,
-                    writer,
-                    options.OutputFile);
+                    options.MsdnLinks, 
+                    options.MsdnLinkViewParameter,
+                    writer);
+
+                // Write markdown to the output file
+                File.WriteAllText(options.OutputFile, writer.FullText);
             }
             catch (BadImageFormatException exc)
             {
                 Console.WriteLine($"Error: {exc.Message}");
                 Console.WriteLine($"Hresult:{exc.HResult}");
-                if (!string.IsNullOrEmpty(exc.HelpLink)) Console.WriteLine($"Help link: {exc.HelpLink}");
+                if (!exc.HelpLink.IsNullOrEmpty()) Console.WriteLine($"Help link: {exc.HelpLink}");
                 Console.WriteLine($"{exc.StackTrace}");
             }
             catch (Exception exc)

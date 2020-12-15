@@ -15,42 +15,52 @@ namespace MdDox
 {
     public class DocumentationGenerator
     {
+        /// <summary>
+        /// The ordered list of types to document.
+        /// </summary>
+        public OrderedTypeList TypeList;
+        /// <summary>
+        /// XML documentation reader. Finds compiler-generated documentation based on type reflection information.
+        /// </summary>
         public DocXmlReader Reader { get; }
+        /// <summary>
+        /// Writes repository-specific markdown output.
+        /// </summary>
         public IMarkdownWriter Writer { get; }
-        public TypeCollection TypeCollection { get; }
-        public List<TypeCollection.TypeInformation> TypesToDocument { get; }
-        public HashSet<Type> TypesToDocumentSet { get; set; }
         private Func<Type, Queue<string>, string> typeLinkConverter;
         private bool DocumentMethodDetails { get; set; }
 
+        public static void GenerateMarkdown(
+            OrderedTypeList typeList,
+            string documentTitle,
+            bool showDocumentDateTime,
+            bool documentMethodDetails,
+            bool msdnLinks,
+            string msdnLinkViewParameter,
+            IMarkdownWriter markdownWriter)
+        {
+            // Generate markdown
+            var generator = new DocumentationGenerator(markdownWriter, typeList, msdnLinks, msdnLinkViewParameter, documentMethodDetails);
+            if (documentTitle != null) generator.WriteDocumentTitle(documentTitle);
+            if (showDocumentDateTime) generator.WritedDateLine();
+            generator.WriteTypeIndex();
+            generator.WriteDocumentationForTypes();
+        }
+
         public DocumentationGenerator(
             IMarkdownWriter writer,
-            TypeCollection typeCollection,
-            Type firstType = null,
+            OrderedTypeList typeList,
             bool msdnLinks = false,
             string msdnView = null,
             bool documentMethodDetails = false)
         {
             Reader = new DocXmlReader();
             Writer = writer;
-            TypeCollection = typeCollection;
-            TypesToDocument = typeCollection.ReferencedTypes.Values
-                .OrderBy(t => t.Type.Namespace)
-                .ThenBy(t => t.Type.Name).ToList();
-            if (firstType != null)
-            {
-                var typeDesc = TypesToDocument.FirstOrDefault(t => t.Type == firstType);
-                if (typeDesc != null)
-                {
-                    TypesToDocument.Remove(typeDesc);
-                    TypesToDocument.Insert(0, typeDesc);
-                }
-            }
+            TypeList = typeList;
 
-            TypesToDocumentSet = new HashSet<Type>(TypesToDocument.Select(t => t.Type));
             typeLinkConverter = (type, _) =>
             {
-                if (TypesToDocumentSet.Contains(type))
+                if (TypeList.TypesToDocumentSet.Contains(type))
                 {
                     return type.IsGenericTypeDefinition ?
                         Writer.HeadingLink(TypeTitle(type), type.Name.CleanGenericTypeName()) :
@@ -74,198 +84,9 @@ namespace MdDox
             DocumentMethodDetails = documentMethodDetails;
         }
 
-        public static void GenerateMarkdown(
-            Assembly assembly,
-            IMarkdownWriter writer,
-            string outputFileName,
-            List<string> ignoreAttributes,
-            bool ignoreMethods,
-            bool documentMethodDetails,
-            bool recursive,
-            bool msdnLinks,
-            string msdnView,
-            bool showDateLine,
-            bool verbose)
+        public void WriteDocumentTitle(string titleText)
         {
-            GenerateMarkdown(null, assembly, recursive, null, ignoreAttributes, ignoreMethods, documentMethodDetails, msdnLinks, msdnView, showDateLine, verbose,
-                writer, outputFileName);
-        }
-
-        public static void GenerateMarkdown(
-            Type rootType,
-            IMarkdownWriter writer,
-            string outputFileName,
-            List<string> ignoreAttributes,
-            bool ignoreMethods,
-            bool documentMethodDetails,
-            bool recursive,
-            bool msdnLinks,
-            string msdnView,
-            bool showDateLine,
-            bool verbose)
-        {
-            GenerateMarkdown(rootType, null, recursive, null, ignoreAttributes, ignoreMethods, documentMethodDetails, msdnLinks, msdnView, showDateLine, verbose,
-                writer, outputFileName);
-        }
-
-        static bool HasIgnoreAttribute(PropertyInfo info, HashSet<string> ignoreAttributes)
-        {
-            if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
-        }
-        static bool HasIgnoreAttribute(MethodBase info, HashSet<string> ignoreAttributes)
-        {
-            if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
-        }
-        static bool HasIgnoreAttribute(Type info, HashSet<string> ignoreAttributes)
-        {
-            if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
-        }
-
-        public static void GenerateMarkdown(
-            Type rootType,
-            Assembly assembly,
-            bool recursiveAssemblyTraversal,
-            List<string> recursiveAssemblies,
-            List<string> ignoreAttributes,
-            bool ignoreMethods,
-            bool documentMethodDetails,
-            bool msdnLinks,
-            string msdnView,
-            bool showDateLine,
-            bool verbose,
-            IMarkdownWriter markdownWriter,
-            string outputFileName)
-        {
-            // Reflection setup
-            var allAssemblyTypes = assembly != null;
-            if (assembly == null) assembly = rootType.Assembly;
-            var ignoreAttributesSet = ignoreAttributes == null || ignoreAttributes.Count == 0 ? null : new HashSet<string>(ignoreAttributes);
-
-            if (recursiveAssemblies != null && recursiveAssemblies.Count == 0) recursiveAssemblies = null;
-
-            if (verbose)
-            {
-                if (assembly != null) Log(assembly, "Root assembly ");
-            }
-
-            var reflectionSettings = ReflectionSettings.Default;
-            reflectionSettings.PropertyFilter = info => PropertyFilter(info, ignoreAttributesSet, verbose);
-            reflectionSettings.MethodFilter = info => MethodFilter(info, ignoreMethods, ignoreAttributesSet, verbose);
-            reflectionSettings.TypeFilter = type => TypeFilter(type, ignoreAttributesSet, verbose);
-            reflectionSettings.AssemblyFilter =
-                reflectionAssembly => AssemblyFilter(reflectionAssembly, assembly, recursiveAssemblies, recursiveAssemblyTraversal, verbose);
-
-            // Reflection
-            var typeCollection = allAssemblyTypes ?
-                TypeCollection.ForReferencedTypes(assembly, reflectionSettings) :
-                TypeCollection.ForReferencedTypes(rootType, reflectionSettings);
-
-            // Generate markdown
-            var generator = new DocumentationGenerator(markdownWriter, typeCollection, rootType, msdnLinks, msdnView, documentMethodDetails);
-            if (assembly != null) generator.WriteDocumentTitle(assembly);
-            if (showDateLine) generator.WritedDateLine();
-            generator.WriteTypeIndex();
-            generator.WriteDocumentationForTypes();
-
-            // Write markdown to the output file
-            File.WriteAllText(outputFileName, generator.Writer.FullText);
-        }
-
-        #region Filters and logging
-        public static bool PropertyFilter(PropertyInfo info, HashSet<string> ignoreAttributesSet, bool verbose)
-        {
-            var document = !HasIgnoreAttribute(info, ignoreAttributesSet);
-            if (verbose)
-            {
-                Log(info, (document ? "Document " : "Ignore by attribute ") + "property ");
-            }
-            return document;
-        }
-
-        public static void Log(PropertyInfo info, string message)
-        {
-            Console.WriteLine("    " + message + info.ToTypeNameString() + " " + info.Name);
-        }
-
-        public static bool MethodFilter(MethodBase info, bool ignoreMethods, HashSet<string> ignoreAttributesSet, bool verbose)
-        {
-            if (ignoreMethods) return false;
-            var document = !HasIgnoreAttribute(info, ignoreAttributesSet);
-            if (verbose)
-            {
-                Log(info, (document ? "Document " : "Ignore by attribute ") + "method ");
-            }
-            return document;
-        }
-
-        public static void Log(MethodBase info, string message)
-        {
-            Console.WriteLine("    " + message + info.Name + info.ToParametersString());
-        }
-
-        public static bool TypeFilter(Type type, HashSet<string> ignoreAttributesSet, bool verbose)
-        {
-            if (HasIgnoreAttribute(type, ignoreAttributesSet))
-            {
-                if (verbose) Log(type, "Ignore by attribute ");
-                return false;
-            }
-            if (verbose) Log(type, "Document type ");
-            return true;
-        }
-
-        public static void Log(Type type, string message)
-        {
-            Console.WriteLine("  " + message + type.Namespace + "." +  type.ToNameString());
-        }
-
-        public static bool AssemblyFilter(
-            Assembly assembly,
-            Assembly rootAssembly,
-            List<string> recursiveAssemblies, 
-            bool recursiveAssemblyTraversal, 
-            bool verbose)
-        {
-            if (assembly == rootAssembly) return true;
-
-            if (!recursiveAssemblyTraversal)
-            {
-                if (!verbose) return false;
-                Log(assembly, "No recursive traversal. Ignoring ");
-                return false;
-            }
-
-            if (recursiveAssemblies == null) return true;
-
-            if (!recursiveAssemblies.Any(name => name.Equals(Path.GetFileName(assembly.Location), StringComparison.OrdinalIgnoreCase)))
-            {
-                if (!verbose) return false;
-                Log(assembly, "Assembly not in the list. Ignoring ");
-                return false;
-            }
-            if (File.Exists(Path.ChangeExtension(assembly.Location, ".xml"))) return true;
-            if (!verbose) return false;
-            Log(assembly, "No xml file for the assembly. Ignoring ");
-            return false;
-        }
-
-        public static void Log(Assembly assembly, string message)
-        {
-            Console.WriteLine(message + assembly.FullName);
-            Console.WriteLine("File path: " + assembly.Location);
-        }
-        #endregion
-
-        public void WriteDocumentTitle(Assembly assembly, string titleText = "API documentation")
-        {
-            Writer.WriteH1($"{Path.GetFileName(assembly.ManifestModule.Name)} v.{assembly.GetName().Version} " +
-                           titleText ?? "");
+            Writer.WriteH1(titleText ?? "");
         }
 
         public void WritedDateLine()
@@ -283,7 +104,7 @@ namespace MdDox
         static (string cref, string innerText, string beforeText, string afterText) FindTagWithAttribute(
             string text, string tag, string attributeName)
         {
-            if (string.IsNullOrEmpty(text) || !text.Contains(tag)) return (null, null, text, null);
+            if (text.IsNullOrEmpty() || !text.Contains(tag)) return (null, null, text, null);
             var simpleTag = new Regex("<" + tag + "( +)" + attributeName + "( *)=( *)\"(.*?)\"( *)/>");
             var match = simpleTag.Match(text);
             if (match.Success)
@@ -349,17 +170,19 @@ namespace MdDox
         static string MsdnUrlForType(Type type, string view = null)
         {
             var docLocale = "en-us";
-            var urlParameters = string.IsNullOrEmpty(view) ? "" : $"?view={view}";
+            var urlParameters = view.IsNullOrEmpty() ? "" : $"?view={view}";
             var typeNameFragment = type.FullName.ToLowerInvariant();
             if (typeNameFragment.Contains('`')) typeNameFragment = typeNameFragment.Replace('`', '-');
             var url = $"https://docs.microsoft.com/{docLocale}/dotnet/api/{typeNameFragment}{urlParameters}";
             return url;
         }
 
+        static string DoubleNewLine = Environment.NewLine + Environment.NewLine;
+
         static string RemoveParaTags(string text) => text?
-            .RegexReplace(@"\s*</para>\s*<para>\s*", "\r\n\r\n")
-            .RegexReplace(@"\s*<para>\s*", "\r\n\r\n")
-            .RegexReplace(@"\s*</para>\s*", "\r\n\r\n")
+            .RegexReplace(@"\s*</para>\s*<para>\s*", DoubleNewLine)
+            .RegexReplace(@"\s*<para>\s*", DoubleNewLine)
+            .RegexReplace(@"\s*</para>\s*", DoubleNewLine)
             .Trim();
 
         /// <summary>
@@ -369,7 +192,7 @@ namespace MdDox
         /// <param name="indexTitleText"></param>
         public void WriteTypeIndex(string indexTitleText = "All types")
         {
-            var namesForTOC = TypesToDocument
+            var namesForTOC = TypeList.TypesToDocument
                 .Select(typeData => Writer.HeadingLink(TypeTitle(typeData.Type), TypeTitle(typeData.Type))).ToList();
             if (namesForTOC.Count == 0) return;
 
@@ -397,17 +220,8 @@ namespace MdDox
             var enumComments = Reader.GetEnumComments(enumType, true);
             Writer.WriteLine(ProcessTags(enumComments.Summary));
 
-            if (!string.IsNullOrEmpty(enumComments.Example))
-            {
-                Writer.WriteH2("Examples");
-                Writer.WriteLine(ProcessTags(enumComments.Example));
-            }
-
-            if (!string.IsNullOrEmpty(enumComments.Remarks))
-            {
-                Writer.WriteH2("Remarks");
-                Writer.WriteLine(ProcessTags(enumComments.Remarks));
-            }
+            WriteExample(enumComments.Example);
+            WriteRemarks(enumComments.Remarks);
 
             if (enumComments.ValueComments.Count > 0)
             {
@@ -441,17 +255,8 @@ namespace MdDox
             var typeComments = Reader.GetTypeComments(typeData.Type);
             Writer.WriteLine(ProcessTags(typeComments.Summary));
 
-            if (!string.IsNullOrEmpty(typeComments.Example))
-            {
-                Writer.WriteH2("Examples");
-                Writer.WriteLine(ProcessTags(typeComments.Example));
-            }
-
-            if (!string.IsNullOrEmpty(typeComments.Remarks))
-            {
-                Writer.WriteH2("Remarks");
-                Writer.WriteLine(ProcessTags(typeComments.Remarks));
-            }
+            WriteExample(typeComments.Example);
+            WriteRemarks(typeComments.Remarks);
 
             var allProperties = Reader.Comments(typeData.Properties).ToList();
             var allConstructors = Reader.Comments(typeData.Methods.Where(it => it is ConstructorInfo)).ToList();
@@ -564,17 +369,12 @@ namespace MdDox
                 Writer.WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
                 Writer.WriteLine(ProcessTags(comments.Returns));
             }
-
-            if (!string.IsNullOrEmpty(comments.Example))
-            {
-                Writer.WriteH2("Examples");
-                Writer.WriteLine(ProcessTags(comments.Example));
-            }
+            WriteExample(comments.Example);
         }
 
         public void WriteDocumentationForTypes()
         {
-            foreach (var typeData in TypesToDocument)
+            foreach (var typeData in TypeList.TypesToDocument)
             {
                 if (typeData.Type.IsEnum)
                 {
@@ -583,6 +383,21 @@ namespace MdDox
                 }
                 WriteClassDocumentation(typeData);
             }
+        }
+
+        public void WriteExample(string example)
+        {
+            if (example.IsNullOrEmpty()) return;
+
+            Writer.WriteH2("Examples");
+            Writer.WriteLine(ProcessTags(example));
+        }
+        public void WriteRemarks(string remarks)
+        {
+            if (remarks.IsNullOrEmpty()) return;
+
+            Writer.WriteH2("Remarks");
+            Writer.WriteLine(ProcessTags(remarks));
         }
     }
 }
