@@ -32,6 +32,11 @@ namespace MdDox
         public bool ShowDocumentDateTime { get; set; } = true;
 
         /// <summary>
+        /// Optional document title. 
+        /// </summary>
+        public string DocumentTitle { get; set; }
+
+        /// <summary>
         /// Shine the light on the inner workings of the tool.
         /// </summary>
         public bool Verbose { get; set; }

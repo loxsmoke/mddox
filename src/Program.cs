@@ -33,7 +33,7 @@ namespace MdDox
     {
         static void Help()
         {
-            Console.WriteLine($"mddox, version {Assembly.GetExecutingAssembly().GetName().Version}, (c) 2019-2020 loxsmoke ");
+            Console.WriteLine($"mddox, version {Assembly.GetExecutingAssembly().GetName().Version}, (c) 2019-2021 loxsmoke ");
             Console.WriteLine("Markdown documentation generator. See https://github.com/loxsmoke/mddox for more info.");
             Console.WriteLine();
             Console.WriteLine("Usage:");
@@ -57,6 +57,8 @@ namespace MdDox
             Console.WriteLine("   -s | --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types.");
             Console.WriteLine("                               The documentation pages are located at this site https://docs.microsoft.com");
             Console.WriteLine("                               View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1");
+            Console.WriteLine("   -i | --title \"title\"        Document title. Use {assembly} and {version} in the format string to");
+            Console.WriteLine("                               insert the name of the assembly and assembly version.");
             Console.WriteLine("   -n | --no-title             Do not write the \"created by mddox at date\" in the markdown file.");
             Console.WriteLine("   -v | --verbose              Print some debug info when generating documentation.");
         }
@@ -139,6 +141,13 @@ namespace MdDox
                     case "--no-title":
                     case "-n":
                         options.ShowDocumentDateTime = false;
+                        break;
+                    case "--title":
+                    case "-i":
+                        if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
+                        {
+                            options.DocumentTitle = args[++i];
+                        }
                         break;
                     case "--verbose":
                     case "-v":
@@ -237,10 +246,9 @@ namespace MdDox
                     options.IgnoreMethods, 
                     options.Verbose);
 
-                var documentTitle = assembly != null ? $"{Path.GetFileName(assembly.ManifestModule.Name)} v.{assembly.GetName().Version} API documentation" : null;
                 DocumentationGenerator.GenerateMarkdown(
                     typeList,
-                    documentTitle,
+                    GenerateTitle(assembly, options.DocumentTitle),
                     options.ShowDocumentDateTime,
                     options.DocumentMethodDetails,
                     options.MsdnLinks, 
@@ -262,6 +270,15 @@ namespace MdDox
                 Console.WriteLine($"Error: {exc.Message}");
                 Console.WriteLine($"{exc.StackTrace}");
             }
+        }
+
+        protected static string GenerateTitle(Assembly assembly, string format)
+        {
+            if (format == null && assembly == null) return null;
+            var assemblyName = assembly == null ? "" : Path.GetFileName(assembly.ManifestModule.Name);
+            var version = assembly == null ? "" : ("v." + assembly.GetName().Version);
+            if (format == null) format = "{assembly} {version} API documentation";
+            return format.Replace("{assembly}", assemblyName).Replace("{version}", version);
         }
 
         private static Dictionary<string, Assembly> RequestedAssemblies { get; set; } = new Dictionary<string, Assembly>();

@@ -123,30 +123,32 @@ namespace MdDox
             return (null, null, text, null);
         }
 
-        static string ProcessTags(string text)
+        string ProcessTags(string text)
         {
             for (; ; )
             {
                 var (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "seealso", "cref");
                 if (cref != null)
                 {
-                    text = beforeText + "**" + FixCref(cref) + "**" + afterText;
+                    text = beforeText + Writer.Bold(FixCref(cref)) + afterText;
                     continue;
                 }
                 (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "cref");
                 if (cref != null)
                 {
-                    text = beforeText + "**" + FixCref(cref) + "**" + afterText;
+                    text = beforeText + Writer.Bold(FixCref(cref)) + afterText;
                     continue;
                 }
                 (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "href");
                 if (cref != null)
                 {
-                    text = beforeText + $" [{innerText}]({cref}) " + afterText;
+                    text = beforeText + $" {Writer.Link(cref, innerText )} " + afterText;
                     continue;
                 }
 
-                return RemoveParaTags(text);
+                text = RemoveParaTags(text);
+                text = RemoveCodeTags(text);
+                return text;
             }
         }
 
@@ -183,6 +185,15 @@ namespace MdDox
             .RegexReplace(@"\s*</para>\s*<para>\s*", DoubleNewLine)
             .RegexReplace(@"\s*<para>\s*", DoubleNewLine)
             .RegexReplace(@"\s*</para>\s*", DoubleNewLine)
+            .Trim();
+
+        static string InlineCode = "`";
+        static string MultilineCode = "```" + Environment.NewLine;
+        static string RemoveCodeTags(string text) => text?
+            .Replace("<c>", InlineCode)
+            .Replace("</c>", InlineCode)
+            .Replace("<code>", MultilineCode)
+            .Replace("</code>", Environment.NewLine + MultilineCode)
             .Trim();
 
         /// <summary>

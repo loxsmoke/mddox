@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using MdDox.MarkdownWriters.Interfaces;
@@ -98,7 +99,10 @@ namespace MdDox.MarkdownWriters
             if (text == null) return "";
             text = text.Replace("<", "\\<");
             text = text.Replace(">", "\\>");
-            return text.Replace("\r\n", "<br>");
+            text = text.Replace("&gt;", ">");
+            text = text.Replace("&lt;", "<");
+            text = text.Replace("|", "\\|");
+            return text.Replace(Environment.NewLine, "<br>");
         }
         public string Bold(string text)
         {
