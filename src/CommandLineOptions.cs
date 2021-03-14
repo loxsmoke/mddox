@@ -13,7 +13,7 @@ namespace MdDox
         public bool IgnoreMethods { get; set; }
         public bool DocumentMethodDetails { get; set; }
         public List<string> IgnoreAttributes { get; set; } = new List<string>();
-        public bool Recursive { get; set; }
+        public bool AllRecursive { get; set; }
         public List<string> RecursiveAssemblies { get; set; } = new List<string>();
         
         /// <summary>

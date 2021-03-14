@@ -35,7 +35,7 @@ Short format | Long format | Comment
 |---|---|---|
 | -**o** output_md |--**output** output_md  | The name of the markdown output file. |
 | -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket. |
-| -**r**  | --**recursive**           | Step into referenced assemblies recursively. This parameter can be used multiple times to specify multiple assemblies. |
+|   | --**all-recursive**           | Step into all referenced assemblies recursively. This option ignores all assemblies specified by --recursive option below. |
 | -**r** assembly  | --**recursive** assembly | Step recursivelly only into specified assembly or assemblies.<br> This parameter can be used multiple times to specify multiple assemblies. |
 | -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors. |
 | -**d**  | --**method-details**      | Generate detailed documentation for methods and constructors.<br>Setting has no effect if --ignore-methods is specified. |

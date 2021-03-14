@@ -43,7 +43,7 @@ namespace MdDox
             Console.WriteLine("Optional parameters:");
             Console.WriteLine("   -o | --output <output_md>   The name of the markdown output file.");
             Console.WriteLine($"   -f | --format <format>      The markdown file format. Valid values: {MarkdownFormatNames}.");
-            Console.WriteLine("   -r | --recursive            Step into referenced assemblies recursively.");
+            Console.WriteLine("   --all-recursive             Step into referenced assemblies recursively.");
             Console.WriteLine("   -r | --recursive <assembly> Step recursivelly only into specified assembly or assemblies.");
             Console.WriteLine("                               This parameter can be used multiple times to specify multiple assemblies.");
             Console.WriteLine("   -m | --ignore-methods       Do not generate documentation for methods and constructors.");
@@ -109,9 +109,11 @@ namespace MdDox
                         }
                         options.IgnoreAttributes.Add(args[i]);
                         break;
+                    case "--all-recursive":
+                        options.AllRecursive = true;
+                        break;
                     case "--recursive":
                     case "-r":
-                        options.Recursive = true;
                         if (i + 1 < args.Length &&
                             !args[i + 1].StartsWith('-'))
                         {
@@ -236,11 +238,14 @@ namespace MdDox
                             $" Similar type names in the assembly: {string.Join(",", possibleTypes)}");
                     }
                 }
+                var recursive = options.AllRecursive || options.RecursiveAssemblies.Count > 0;
+                if (options.AllRecursive) options.RecursiveAssemblies.Clear();
+
                 var assembly = rootType == null ? myAssembly : null;
                 var typeList = OrderedTypeList.LoadTypes(
                     rootType, 
                     assembly, 
-                    options.Recursive, 
+                    recursive, 
                     options.RecursiveAssemblies, 
                     options.IgnoreAttributes, 
                     options.IgnoreMethods, 
