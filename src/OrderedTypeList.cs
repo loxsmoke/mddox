@@ -45,7 +45,8 @@ namespace MdDox
             // Reflection setup
             var allAssemblyTypes = assembly != null;
             if (assembly == null) assembly = rootType.Assembly;
-            var ignoreAttributesSet = ignoreAttributes == null || ignoreAttributes.Count == 0 ? null : new HashSet<string>(ignoreAttributes);
+            var ignoreAttributesSet = ignoreAttributes == null || ignoreAttributes.Count == 0 ? null : 
+                new HashSet<string>(ignoreAttributes.Select(a => a.EndsWith("Attribute") ? a : (a + "Attribute")));
 
             if (recursiveAssemblies != null && recursiveAssemblies.Count == 0) recursiveAssemblies = null;
 
@@ -71,20 +72,24 @@ namespace MdDox
         static bool HasIgnoreAttribute(PropertyInfo info, HashSet<string> ignoreAttributes)
         {
             if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
+            return HasIgnoreAttribute(info.GetCustomAttributes(), ignoreAttributes);
         }
         static bool HasIgnoreAttribute(MethodBase info, HashSet<string> ignoreAttributes)
         {
             if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
+            return HasIgnoreAttribute(info.GetCustomAttributes(), ignoreAttributes);
         }
         static bool HasIgnoreAttribute(Type info, HashSet<string> ignoreAttributes)
         {
             if (ignoreAttributes == null) return false;
-            var customAttributes = info.GetCustomAttributes().ToList();
-            return info.GetCustomAttributes().Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
+            return HasIgnoreAttribute(info.GetCustomAttributes(), ignoreAttributes);
+        }
+
+        static bool HasIgnoreAttribute(IEnumerable<Attribute> customAttributes, HashSet<string> ignoreAttributes)
+        {
+            var attributeList = customAttributes.ToList();
+            if (attributeList.Count == 0) return false;
+            return attributeList.Any(attr => ignoreAttributes.Contains(attr.GetType().Name));
         }
 
         #region Filters and logging

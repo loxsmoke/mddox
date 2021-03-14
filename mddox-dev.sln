@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mddox-dev", "src\mddox-dev.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocXml", "DocXml\src\DocXml\DocXml.csproj", "{633EEEA6-18E4-4D04-AE48-F46D44129380}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MddoxTests", "test\MddoxTests\MddoxTests.csproj", "{C2F26146-BB73-4C33-9A24-DA39FBF384A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Coverage|Any CPU = Coverage|Any CPU
@@ -26,6 +28,12 @@ Global
 		{633EEEA6-18E4-4D04-AE48-F46D44129380}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{633EEEA6-18E4-4D04-AE48-F46D44129380}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{633EEEA6-18E4-4D04-AE48-F46D44129380}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Coverage|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Coverage|Any CPU.Build.0 = Debug|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2F26146-BB73-4C33-9A24-DA39FBF384A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
