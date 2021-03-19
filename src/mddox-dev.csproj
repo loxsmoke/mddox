@@ -7,7 +7,7 @@
     <PackageId>LoxSmoke.mddox</PackageId>
     <Version>0.5.8</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Copyright>Copyright 2019-2020 LoxSmoke</Copyright>
+    <Copyright>Copyright 2019-2021 LoxSmoke</Copyright>
     <PackageProjectUrl>https://github.com/loxsmoke/mddox</PackageProjectUrl>
     <RepositoryUrl>https://github.com/loxsmoke/mddox</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -31,6 +31,9 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DocXml\src\DocXml\DocXml.csproj" />

@@ -12,6 +12,7 @@ using DocXml.Reflection;
 using LoxSmoke.DocXml;
 using LoxSmoke.DocXml.Reflection;
 using System.ComponentModel.DataAnnotations;
+using MdDox.CommandLineOptions;
 
 namespace MdDox
 {
@@ -31,146 +32,21 @@ namespace MdDox
 
     class Program
     {
-        static void Help()
+        static CommandLineOptions.CommandLineOptions Parse(string [] args)
         {
-            Console.WriteLine($"mddox, version {Assembly.GetExecutingAssembly().GetName().Version}, (c) 2019-2021 loxsmoke ");
-            Console.WriteLine("Markdown documentation generator. See https://github.com/loxsmoke/mddox for more info.");
-            Console.WriteLine();
-            Console.WriteLine("Usage:");
-            Console.WriteLine("   mddox <assembly> <optional-parameters>");
-            Console.WriteLine("   <assembly>             The name of the assembly to document.");
-            Console.WriteLine("");
-            Console.WriteLine("Optional parameters:");
-            Console.WriteLine("   -o | --output <output_md>   The name of the markdown output file.");
-            Console.WriteLine($"   -f | --format <format>      The markdown file format. Valid values: {MarkdownFormatNames}.");
-            Console.WriteLine("   --all-recursive             Step into referenced assemblies recursively.");
-            Console.WriteLine("   -r | --recursive <assembly> Step recursivelly only into specified assembly or assemblies.");
-            Console.WriteLine("                               This parameter can be used multiple times to specify multiple assemblies.");
-            Console.WriteLine("   -m | --ignore-methods       Do not generate documentation for methods and constructors.");
-            Console.WriteLine("   -d | --method-details       Generate detailed documentation for methods and constructors.");
-            Console.WriteLine("                               Setting has no effect if --ignore-methods is specified.");
-            Console.WriteLine("   -a | --ignore-attribute <name> ");
-            Console.WriteLine("                               Do not generate documentation for properties with specified custom attribute.");
-            Console.WriteLine("                               For example JsonIgnoreAttribute");
-            Console.WriteLine("                               This parameter can be used multiple times to specify multiple sttributes.");
-            Console.WriteLine("   -t | --type <name>          Document only this type and all types referenced by this type.");
-            Console.WriteLine("   -s | --msdn [<view>]        Generate links to the MSDN documentation for System.* and Microsoft.* types.");
-            Console.WriteLine("                               The documentation pages are located at this site https://docs.microsoft.com");
-            Console.WriteLine("                               View is an optional parameter of URL specifying the version of the type. For example: netcore-3.1");
-            Console.WriteLine("   -i | --title \"title\"        Document title. Use {assembly} and {version} in the format string to");
-            Console.WriteLine("                               insert the name of the assembly and assembly version.");
-            Console.WriteLine("   -n | --no-title             Do not write the \"created by mddox at date\" in the markdown file.");
-            Console.WriteLine("   -v | --verbose              Print some debug info when generating documentation.");
-        }
+            var result = CliProgram.Parse(args);
+            if (result.Tag == CommandLine.ParserResultType.NotParsed) return null;
 
-        static CommandLineOptions Parse(string [] args)
-        {
-            var options = new CommandLineOptions()
+            var options = ((CommandLine.Parsed<CommandLineOptions.CommandLineOptions>)result).Value;
+            if (string.IsNullOrEmpty(options.Format))
             {
-                Format = MarkdownWriters.First().FormatName,
-            };
-            for (var i = 0; i < args.Length; i++)
-            {
-                switch (args[i])
-                {
-                    case "--output":
-                    case "-o":
-                        if (++i == args.Length)
-                        {
-                            Console.WriteLine("Error: Missing output file name");
-                            return null;
-                        }
-                        options.OutputFile = args[i];
-                        break;
-                    case "--format":
-                    case "-f":
-                        if (++i == args.Length)
-                        {
-                            Console.WriteLine("Error: Missing format");
-                            return null;
-                        }
-                        options.Format = args[i];
-                        break;
-                    case "--ignore-methods":
-                    case "-m":
-                        options.IgnoreMethods = true;
-                        options.DocumentMethodDetails = false;
-                        break;
-                    case "--method-details":
-                    case "-d":
-                        if (!options.IgnoreMethods) options.DocumentMethodDetails = true;
-                        break;
-                    case "--ignore-attribute":
-                    case "-a":
-                        if (++i == args.Length)
-                        {
-                            Console.WriteLine("Error: Missing attribute name");
-                            return null;
-                        }
-                        options.IgnoreAttributes.Add(args[i]);
-                        break;
-                    case "--all-recursive":
-                        options.AllRecursive = true;
-                        break;
-                    case "--recursive":
-                    case "-r":
-                        if (i + 1 < args.Length &&
-                            !args[i + 1].StartsWith('-'))
-                        {
-                            options.RecursiveAssemblies.Add(args[++i]);
-                        }
-                        break;
-                    case "--type":
-                    case "-t":
-                        if (++i == args.Length)
-                        {
-                            Console.WriteLine("Error: Missing type name");
-                            return null;
-                        }
-                        options.TypeName = args[i];
-                        break;
-                    case "--help":
-                    case "-h":
-                        return null;
-                    case "--msdn":
-                    case "-s":
-                        options.MsdnLinks = true;
-                        if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
-                        {
-                            options.MsdnLinkViewParameter = args[++i];
-                        }
-                        break;
-                    case "--no-title":
-                    case "-n":
-                        options.ShowDocumentDateTime = false;
-                        break;
-                    case "--title":
-                    case "-i":
-                        if (i + 1 < args.Length && !args[i + 1].StartsWith('-'))
-                        {
-                            options.DocumentTitle = args[++i];
-                        }
-                        break;
-                    case "--verbose":
-                    case "-v":
-                        options.Verbose = true;
-                        break;
-                    default:
-                        if (args[i].StartsWith("-"))
-                        {
-                            Console.WriteLine($"Error: Unknown parameter {args[i]}");
-                            return null;
-                        }
-                        if (options.AssemblyName == null) options.AssemblyName = args[i];
-                        break;
-                }
+                options.Format = MarkdownWriters.First().FormatName;
             }
-
+            if (options.IgnoreMethods)   options.DocumentMethodDetails = false;
             if (options.AssemblyName != null && options.OutputFile == null)
             {
                 options.OutputFile = Path.GetFileNameWithoutExtension(options.AssemblyName) + ".md";
             }
-
             return options;
         }
 
@@ -184,9 +60,8 @@ namespace MdDox
         static void Main(string[] args)
         {
             var options = Parse(args);
-            if (options?.AssemblyName == null)
+            if (options == null)
             {
-                Help();
                 return;
             }
 
@@ -238,26 +113,32 @@ namespace MdDox
                             $" Similar type names in the assembly: {string.Join(",", possibleTypes)}");
                     }
                 }
-                var recursive = options.AllRecursive || options.RecursiveAssemblies.Count > 0;
-                if (options.AllRecursive) options.RecursiveAssemblies.Clear();
+                var recursive = options.AllRecursive || options.RecursiveAssemblies.Any();
+                if (options.AllRecursive) options.RecursiveAssemblies = new List<string>();
 
+                var msdnLinks = !string.IsNullOrEmpty(options.MsdnLinkViewParameter);
+                var msdnView = options.MsdnLinkViewParameter;
+                if (msdnLinks && msdnView.Equals("default", StringComparison.OrdinalIgnoreCase))
+                {
+                    msdnView = null;
+                }
                 var assembly = rootType == null ? myAssembly : null;
                 var typeList = OrderedTypeList.LoadTypes(
                     rootType, 
                     assembly, 
                     recursive, 
-                    options.RecursiveAssemblies, 
-                    options.IgnoreAttributes, 
+                    options.RecursiveAssemblies.ToList(), 
+                    options.IgnoreAttributes.ToList(), 
                     options.IgnoreMethods, 
                     options.Verbose);
 
                 DocumentationGenerator.GenerateMarkdown(
                     typeList,
                     GenerateTitle(assembly, options.DocumentTitle),
-                    options.ShowDocumentDateTime,
+                    !options.DoNotShowDocumentDateTime,
                     options.DocumentMethodDetails,
-                    options.MsdnLinks, 
-                    options.MsdnLinkViewParameter,
+                    msdnLinks, 
+                    msdnView,
                     writer);
 
                 // Write markdown to the output file
