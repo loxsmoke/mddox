@@ -37,12 +37,12 @@ Short format | Long format | Comment
 |---|---|---|
 | -**o** output_md |--**output** output_md  | The name of the markdown output file. |
 | -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket. |
-|   | --**all-recursive**           | Step into all referenced assemblies recursively. This option ignores all assemblies specified by --recursive option below. |
-| -**r** assembly  | --**recursive** assembly | Step recursivelly only into specified assembly or assemblies.<br> This parameter can be used multiple times to specify multiple assemblies. |
-| -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors. |
+|   | --**all-recursive**           | Step into all referenced assemblies recursively. |
+| -**r** assembly  | --**recursive** assembly | Step into specified referenced assemblies recursively.<br>Specify one or more assembly names separated by spaces. |
+| -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors.<br>Useful for POCO documentation. |
 | -**d**  | --**method-details**      | Generate detailed documentation for methods and constructors.<br>Setting has no effect if --ignore-methods is specified. |
-| -**a** name  | --**ignore-attribute** name | Do not generate documentation for properties with specified custom attribute. For example  JsonIgnoreAttribute<br> This parameter can be used multiple times to specify multiple sttributes. |
-| -**t** name  | --**type** name         | Document only this type and all types referenced by this type. |
+| -**a** name  | --**ignore-attribute** name | Do not generate documentation for properties with specified custom attribute(s).<br>For example JsonIgnoreAttribute<br>More than one space-separate attribute can be specified. |
+| -**t** name  | --**type** name         | Document only the specified type and all types referenced by it. |
 | -**s** view  | --**msdn** view     | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View specifies what version of the type to show. Use **latest**, **netcore-3.1**, or **net-5.0** |  
 | -**i** "title" | --**title** "title"   | Document title. Use {assembly} and {version} in the format string to insert the name of the assembly and assembly version. |
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
