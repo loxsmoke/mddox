@@ -58,30 +58,32 @@ namespace MdDox
             Writer = writer;
             TypeList = typeList;
 
-            typeLinkConverter = (type, _) =>
-            {
-                if (TypeList.TypesToDocumentSet.Contains(type))
-                {
-                    return type.IsGenericTypeDefinition ?
-                        Writer.HeadingLink(TypeTitle(type), type.Name.CleanGenericTypeName()) :
-                        Writer.HeadingLink(TypeTitle(type), type.ToNameString());
-                }
-                if (msdnLinks &&
-                    type != typeof(string) &&
-                    (!type.IsValueType || type.IsEnum) &&
-                    (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
-                    type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
-                {
-                    return Writer.Link(MsdnUrlForType(type, msdnView),
-                        type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
-                }
-                if (type.IsGenericTypeDefinition)
-                {
-                    return $"{type.Name.CleanGenericTypeName()}";
-                }
-                return null;
-            };
+            typeLinkConverter = (type, _) => TypeNameWithLinks(type, msdnLinks, msdnView);
             DocumentMethodDetails = documentMethodDetails;
+        }
+
+        public string TypeNameWithLinks(Type type, bool msdnLinks, string msdnView)
+        {
+            if (TypeList.TypesToDocumentSet.Contains(type))
+            {
+                return type.IsGenericTypeDefinition ?
+                    Writer.HeadingLink(TypeTitle(type), type.Name.CleanGenericTypeName()) :
+                    Writer.HeadingLink(TypeTitle(type), type.ToNameString());
+            }
+            if (msdnLinks &&
+                type != typeof(string) &&
+                (!type.IsValueType || type.IsEnum) &&
+                (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
+                type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
+            {
+                return Writer.Link(MsdnUrlForType(type, msdnView),
+                    type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
+            }
+            if (type.IsGenericTypeDefinition)
+            {
+                return $"{type.Name.CleanGenericTypeName()}";
+            }
+            return null;
         }
 
         public void WriteDocumentTitle(string titleText)
@@ -293,7 +295,7 @@ namespace MdDox
                 Writer.WriteTableTitle("Name", "Summary");
                 foreach (var ctor in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
-                    var heading = typeData.Type.ToNameString() + ctor.Info.ToParametersString(typeLinkConverter, true);
+                    var heading = typeData.Type.ToNameString() + ctor.Info.ToParametersString();
                     heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
                         heading,
@@ -310,7 +312,7 @@ namespace MdDox
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
                     var methodInfo = method.Info as MethodInfo;
-                    var heading = methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true);
+                    var heading = methodInfo.Name + methodInfo.ToParametersString();
                     heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
                     Writer.WriteTableRow(
                         heading,
@@ -358,7 +360,7 @@ namespace MdDox
 
         private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
         {
-            Writer.WriteH3(name + info.ToParametersString(typeLinkConverter, true));
+            Writer.WriteH3(name + info.ToParametersString());
             Writer.WriteLine(ProcessTags(comments.Summary));
             if (comments.Parameters.Count > 0)
             {
