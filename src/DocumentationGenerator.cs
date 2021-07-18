@@ -9,7 +9,9 @@ using LoxSmoke.DocXml;
 using LoxSmoke.DocXml.Reflection;
 using static LoxSmoke.DocXml.Reflection.DocXmlReaderExtensions;
 using static DocXml.Reflection.ReflectionExtensions;
-using MdDox.MarkdownWriters.Interfaces;
+using MdDox.MarkdownFormatters.Interfaces;
+using MdDox.Reflection;
+using System.Text;
 
 namespace MdDox
 {
@@ -20,55 +22,267 @@ namespace MdDox
         /// </summary>
         public OrderedTypeList TypeList;
         /// <summary>
+        /// Document generator options.
+        /// </summary>
+        public DocumentationGeneratorOptions Options { get; }
+        /// <summary>
         /// XML documentation reader. Finds compiler-generated documentation based on type reflection information.
         /// </summary>
         public DocXmlReader Reader { get; }
         /// <summary>
-        /// Writes repository-specific markdown output.
+        /// Converts text to repository-specific markdown output.
         /// </summary>
-        public IMarkdownWriter Writer { get; }
-        private Func<Type, Queue<string>, string> typeLinkConverter;
-        private bool DocumentMethodDetails { get; set; }
+        public IMarkdownFormatter Markdown { get; }
+        /// <summary>
+        /// Generated markdown text. Call BuildDocument() before retrieving the text.
+        /// </summary>
+        public string FullText => OutputText.ToString();
 
-        public static void GenerateMarkdown(
-            OrderedTypeList typeList,
-            string documentTitle,
-            bool showDocumentDateTime,
-            bool documentMethodDetails,
-            bool msdnLinks,
-            string msdnLinkViewParameter,
-            IMarkdownWriter markdownWriter)
-        {
-            // Generate markdown
-            var generator = new DocumentationGenerator(markdownWriter, typeList, msdnLinks, msdnLinkViewParameter, documentMethodDetails);
-            if (documentTitle != null) generator.WriteDocumentTitle(documentTitle);
-            if (showDocumentDateTime) generator.WritedDateLine();
-            generator.WriteTypeIndex();
-            generator.WriteDocumentationForTypes();
-        }
+        Func<Type, Queue<string>, string> typeLinkConverter;
+        StringBuilder OutputText { get; } = new StringBuilder();
+
 
         public DocumentationGenerator(
-            IMarkdownWriter writer,
             OrderedTypeList typeList,
-            bool msdnLinks = false,
-            string msdnView = null,
-            bool documentMethodDetails = false)
+            DocumentationGeneratorOptions options,
+            IMarkdownFormatter writer)
         {
             Reader = new DocXmlReader();
-            Writer = writer;
             TypeList = typeList;
+            Options = options;
+            Markdown = writer;
 
-            typeLinkConverter = (type, _) => TypeNameWithLinks(type, msdnLinks, msdnView);
-            DocumentMethodDetails = documentMethodDetails;
+            typeLinkConverter = (type, _) => TypeNameWithLinks(type, options.MsdnLinks, options.MsdnView);
         }
 
+        #region Top level document build functions
+        public void BuildDocument()
+        {
+            OutputText.Clear();
+            WriteDocumentTitle(Options.DocumentTitle);
+            WritedDateLine();
+            WriteTypeIndex(Options.TypeIndexTitle, Options.TypeIndexColumnCount);
+            foreach (var typeData in TypeList.TypesToDocument)
+            {
+                WriteTypeDocumentation(typeData);
+            }
+        }
+
+        public void WriteDocumentTitle(string titleText)
+        {
+            if (titleText == null) return;
+            WriteBigTitle(titleText);
+        }
+
+        public void WritedDateLine()
+        {
+            if (!Options.ShowDocumentDateTime) return;
+            WriteLine("Created by " + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
+                $" on {DateTime.Now.ToShortDateString()}");
+        }
+
+        /// <summary>
+        /// Write table of contents. It is a multi-column table with each cell containing 
+        /// the link to the heading of the type.
+        /// </summary>
+        /// <param name="indexTitleText"></param>
+        /// <param name="columnCount"></param>
+        public void WriteTypeIndex(string indexTitleText, int columnCount)
+        {
+            if (TypeList.TypesToDocument.Count == 0) return;
+
+            if (indexTitleText != null) WriteBigTitle(indexTitleText);
+            var emptyRow = Enumerable.Repeat(" ", columnCount).ToArray();
+            WriteTableTitle(emptyRow);
+            for (var i = 0; i < TypeList.TypesToDocument.Count; i += columnCount)
+            {
+                var row = emptyRow.ToArray();
+                for (var j = 0; j < columnCount && j + i < TypeList.TypesToDocument.Count; j++)
+                {
+                    var typeData = TypeList.TypesToDocument[i + j];
+                    row[j] = Markdown.HeadingLink(TypeTitle(typeData.Type), TypeTitle(typeData.Type));
+                }
+                WriteTableRow(row);
+            }
+        }
+
+        public void WriteTypeDocumentation(TypeCollection.TypeInformation typeData)
+        {
+            if (typeData.Type.IsEnum)
+            {
+                WriteEnumDocumentation(typeData);
+            }
+            else
+            {
+                WriteClassDocumentation(typeData);
+            }
+        }
+
+        /// <summary>
+        /// Write markdown documentation for the enum type:
+        /// Examples, Remarks, 
+        /// </summary>
+        /// <param name="typeData"></param>
+        public void WriteEnumDocumentation(TypeCollection.TypeInformation typeData)
+        {
+            WriteTypeTitle(typeData.Type);
+
+            var enumComments = Reader.GetEnumComments(typeData.Type, true);
+            WriteSummary(enumComments.Summary);
+            WriteExample(enumComments.Example);
+            WriteRemarks(enumComments.Remarks);
+
+            if (enumComments.ValueComments.Count > 0)
+            {
+                WriteTitle("Values");
+                WriteTableTitle("Name", "Summary");
+                foreach (var prop in enumComments.ValueComments)
+                {
+                    WriteTableRow(Markdown.Bold(prop.Name), ProcessTags(prop.Summary));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write markdown documentation for the class:
+        /// Base class,  summary, remarks, Properties, constructors, methods and fields
+        /// </summary>
+        /// <param name="typeData"></param>
+        public void WriteClassDocumentation(TypeCollection.TypeInformation typeData)
+        {
+            WriteTypeTitle(typeData.Type);
+
+            if (typeData.Type.BaseType != null &&
+                typeData.Type.BaseType != typeof(Object) &&
+                typeData.Type.BaseType != typeof(ValueType))
+            {
+                WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
+            }
+
+            var typeComments = Reader.GetTypeComments(typeData.Type);
+            WriteSummary(typeComments.Summary);
+            WriteExample(typeComments.Example);
+            WriteRemarks(typeComments.Remarks);
+
+            var allProperties = Reader.Comments(typeData.Properties).ToList();
+            var allConstructors = Reader.Comments(typeData.Methods.Where(it => it is ConstructorInfo)).ToList();
+            var allMethods = Reader.Comments(typeData.Methods
+                .Where(it => !(it is ConstructorInfo) && (it is MethodInfo))).ToList();
+            var allFields = Reader.Comments(typeData.Fields).ToList();
+            if (allProperties.Count > 0)
+            {
+                WriteTitle("Properties");
+                WriteTableTitle("Name", "Type", "Summary");
+                foreach (var (Info, Comments) in allProperties)
+                {
+                    WriteTableTitle(
+                        Markdown.Bold(Info.Name),
+                        Info.ToTypeNameString(typeLinkConverter, true),
+                        ProcessTags(Comments.Summary));
+                }
+            }
+
+            if (allConstructors.Count > 0)
+            {
+                WriteTitle("Constructors");
+                WriteTableTitle("Name", "Summary");
+                foreach (var (Info, Comments) in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
+                {
+                    var heading = typeData.Type.ToNameString() + Info.ToParametersString();
+                    heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
+                    WriteTableRow(heading, ProcessTags(Comments.Summary));
+                }
+            }
+
+            if (allMethods.Count > 0)
+            {
+                WriteTitle("Methods");
+                WriteTableTitle("Name", "Returns", "Summary");
+                foreach (var (Info, Comments) in allMethods
+                    .OrderBy(m => m.Info.Name)
+                    .ThenBy(m => m.Info.GetParameters().Length))
+                {
+                    var methodInfo = Info as MethodInfo;
+                    var heading = methodInfo.Name + methodInfo.ToParametersString();
+                    heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
+                    WriteTableRow(heading,
+                        methodInfo.ToTypeNameString(typeLinkConverter, true),
+                        ProcessTags(Comments.Summary));
+                }
+            }
+
+            if (allFields.Count > 0)
+            {
+                WriteTitle("Fields");
+                WriteTableTitle("Name", "Type", "Summary");
+                foreach (var (Info, Comments) in allFields)
+                {
+                    WriteTableRow(
+                        Markdown.Bold(Info.Name),
+                        Info.ToTypeNameString(typeLinkConverter, true),
+                        ProcessTags(Comments.Summary));
+                }
+            }
+
+            if (Options.DocumentMethodDetails)
+            {
+                if (allConstructors.Count > 0)
+                {
+                    WriteTitle("Constructors");
+                    foreach (var (info, comments) in allConstructors
+                        .OrderBy(m => m.Info.GetParameters().Length))
+                    {
+                        WriteMethodDetails(typeData.Type.ToNameString(), info, comments);
+                    }
+                }
+                if (allMethods.Count > 0)
+                {
+                    WriteTitle("Methods");
+                    foreach (var (info, comments) in allMethods
+                        .OrderBy(m => m.Info.Name)
+                        .ThenBy(m => m.Info.GetParameters().Length))
+                    {
+                        WriteMethodDetails(info.Name, info, comments);
+                    }
+                }
+            }
+        }
+
+        private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
+        {
+            WriteSmallTitle(name + info.ToParametersString());
+            WriteSummary(comments.Summary);
+            if (comments.Parameters.Count > 0)
+            {
+                var parameters = info.GetParameters();
+                var i = 0;
+                WriteTableTitle("Parameter", "Type", "Description");
+                foreach (var (paramName, text) in comments.Parameters)
+                {
+                    WriteTableRow(paramName,
+                        parameters[i++].ToTypeNameString(typeLinkConverter, true),
+                        ProcessTags(text));
+                }
+            }
+            WriteLine("");
+
+            if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
+            {
+                WriteSmallTitle("Returns");
+                WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
+                WriteSummary(comments.Returns);
+            }
+            WriteExample(comments.Example);
+        }
+        #endregion
+
+        #region Formatting, tags, links
         public string TypeNameWithLinks(Type type, bool msdnLinks, string msdnView)
         {
             if (TypeList.TypesToDocumentSet.Contains(type))
             {
-                return type.IsGenericTypeDefinition ?
-                    Writer.HeadingLink(TypeTitle(type), type.Name.CleanGenericTypeName()) :
-                    Writer.HeadingLink(TypeTitle(type), type.ToNameString());
+                return Markdown.HeadingLink(TypeTitle(type), 
+                    type.IsGenericTypeDefinition ?  type.Name.CleanGenericTypeName() : type.ToNameString());
             }
             if (msdnLinks &&
                 type != typeof(string) &&
@@ -76,7 +290,7 @@ namespace MdDox
                 (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
                 type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
             {
-                return Writer.Link(MsdnUrlForType(type, msdnView),
+                return Markdown.Link(MsdnUrlForType(type, msdnView),
                     type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
             }
             if (type.IsGenericTypeDefinition)
@@ -84,23 +298,6 @@ namespace MdDox
                 return $"{type.Name.CleanGenericTypeName()}";
             }
             return null;
-        }
-
-        public void WriteDocumentTitle(string titleText)
-        {
-            Writer.WriteH1(titleText ?? "");
-        }
-
-        public void WritedDateLine()
-        {
-            Writer.Write("Created by ");
-            Writer.WriteLink("https://github.com/loxsmoke/mddox", "mddox");
-            Writer.WriteLine($" on {DateTime.Now.ToShortDateString()}");
-        }
-
-        static string TypeTitle(Type type)
-        {
-            return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
         }
 
         static (string cref, string innerText, string beforeText, string afterText) FindTagWithAttribute(
@@ -132,35 +329,45 @@ namespace MdDox
                 var (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "seealso", "cref");
                 if (cref != null)
                 {
-                    text = beforeText + Writer.Bold(FixCref(cref)) + afterText;
+                    text = beforeText + Markdown.Bold(FixCref(cref)) + afterText;
                     continue;
                 }
                 (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "cref");
                 if (cref != null)
                 {
-                    text = beforeText + Writer.Bold(FixCref(cref)) + afterText;
+                    text = beforeText + Markdown.Bold(FixCref(cref)) + afterText;
                     continue;
                 }
                 (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "href");
                 if (cref != null)
                 {
-                    text = beforeText + $" {Writer.Link(cref, innerText )} " + afterText;
+                    text = beforeText + $" {Markdown.Link(cref, innerText )} " + afterText;
                     continue;
                 }
 
-                text = RemoveParaTags(text);
-                text = RemoveCodeTags(text);
+                if (text == null) return text;
+                text = text
+                    .RegexReplace(@"\s*</para>\s*<para>\s*", Markdown.NewLine)
+                    .RegexReplace(@"\s*<para>\s*", Markdown.NewLine)
+                    .RegexReplace(@"\s*</para>\s*", Markdown.NewLine)
+                    .Trim();
+
+                if (text == null) return text;
+                text = text
+                    .Replace("<c>", Markdown.StartInlineCode)
+                    .Replace("</c>", Markdown.EndInlineCode)
+                    .Replace("<code>", Markdown.StartMultilineCode)
+                    .Replace("</code>", Markdown.EndMultilineCode)
+                    .Trim();
                 return text;
             }
         }
 
         static string FixCref(string crefText)
         {
-            if (crefText.Contains(":")) // XML doc Id
-            {
-                return crefText.Substring(crefText.IndexOf(":") + 1);
-            }
-            return crefText;
+            if (!crefText.Contains(":")) return crefText;
+            // XML doc Id
+            return crefText.Substring(crefText.IndexOf(":") + 1);
         }
 
         /// <summary>
@@ -181,236 +388,65 @@ namespace MdDox
             return url;
         }
 
-        static string DoubleNewLine = Environment.NewLine + Environment.NewLine;
-
-        static string RemoveParaTags(string text) => text?
-            .RegexReplace(@"\s*</para>\s*<para>\s*", DoubleNewLine)
-            .RegexReplace(@"\s*<para>\s*", DoubleNewLine)
-            .RegexReplace(@"\s*</para>\s*", DoubleNewLine)
-            .Trim();
-
-        static string InlineCode = "`";
-        static string MultilineCode = "```" + Environment.NewLine;
-        static string RemoveCodeTags(string text) => text?
-            .Replace("<c>", InlineCode)
-            .Replace("</c>", InlineCode)
-            .Replace("<code>", MultilineCode)
-            .Replace("</code>", Environment.NewLine + MultilineCode)
-            .Trim();
-
-        /// <summary>
-        /// Write table of contents. It is a three column table with each cell containing 
-        /// the link to the heading of the type.
-        /// </summary>
-        /// <param name="indexTitleText"></param>
-        public void WriteTypeIndex(string indexTitleText = "All types")
+        static string TypeTitle(Type type)
         {
-            var namesForTOC = TypeList.TypesToDocument
-                .Select(typeData => Writer.HeadingLink(TypeTitle(typeData.Type), TypeTitle(typeData.Type))).ToList();
-            if (namesForTOC.Count == 0) return;
+            return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
+        }
+        #endregion
 
-            if (indexTitleText != null) Writer.WriteH1(indexTitleText);
-            Writer.WriteTableTitle(" ", " ", " ");
-            var rowCount = namesForTOC.Count / 3 + (((namesForTOC.Count % 3) == 0) ? 0 : 1);
-            for (var i = 0; i < rowCount; i++)
-            {
-                Writer.WriteTableRow(namesForTOC[i],
-                    rowCount + i < namesForTOC.Count ? namesForTOC[rowCount + i] : " ",
-                    rowCount * 2 + i < namesForTOC.Count ? namesForTOC[rowCount * 2 + i] : " ");
-            }
+        #region Simple formatted write functions
+        public void WriteTypeTitle(Type type)
+        {
+            WriteBigTitle(TypeTitle(type));
+            WriteLine("Namespace: " + type.Namespace);
         }
 
-        /// <summary>
-        /// Write markdown documentation for the enum type:
-        /// Examples, Remarks, 
-        /// </summary>
-        /// <param name="enumType"></param>
-        public void WriteEnumDocumentation(Type enumType)
+        public void WriteSummary(string summary)
         {
-            Writer.WriteH1(TypeTitle(enumType));
-            Writer.WriteLine("Namespace: " + enumType.Namespace);
-
-            var enumComments = Reader.GetEnumComments(enumType, true);
-            Writer.WriteLine(ProcessTags(enumComments.Summary));
-
-            WriteExample(enumComments.Example);
-            WriteRemarks(enumComments.Remarks);
-
-            if (enumComments.ValueComments.Count > 0)
-            {
-                Writer.WriteH2("Values");
-                Writer.WriteTableTitle("Name", "Summary");
-                foreach (var prop in enumComments.ValueComments)
-                {
-                    Writer.WriteTableRow(Writer.Bold(prop.Name),
-                        ProcessTags(prop.Summary));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Write markdown documentation for the class:
-        /// Base class,  summary, remarks, Properties, constructors, methods and fields
-        /// </summary>
-        /// <param name="typeData"></param>
-        public void WriteClassDocumentation(TypeCollection.TypeInformation typeData)
-        {
-            Writer.WriteH1(TypeTitle(typeData.Type));
-            Writer.WriteLine("Namespace: " + typeData.Type.Namespace);
-
-            if (typeData.Type.BaseType != null &&
-                typeData.Type.BaseType != typeof(Object) &&
-                typeData.Type.BaseType != typeof(ValueType))
-            {
-                Writer.WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
-            }
-
-            var typeComments = Reader.GetTypeComments(typeData.Type);
-            Writer.WriteLine(ProcessTags(typeComments.Summary));
-
-            WriteExample(typeComments.Example);
-            WriteRemarks(typeComments.Remarks);
-
-            var allProperties = Reader.Comments(typeData.Properties).ToList();
-            var allConstructors = Reader.Comments(typeData.Methods.Where(it => it is ConstructorInfo)).ToList();
-            var allMethods = Reader.Comments(typeData.Methods
-                .Where(it => !(it is ConstructorInfo) && (it is MethodInfo))).ToList();
-            var allFields = Reader.Comments(typeData.Fields).ToList();
-            if (allProperties.Count > 0)
-            {
-                Writer.WriteH2("Properties");
-                Writer.WriteTableTitle("Name", "Type", "Summary");
-                foreach (var prop in allProperties)
-                {
-                    Writer.WriteTableRow(
-                        Writer.Bold(prop.Info.Name),
-                        prop.Info.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(prop.Comments.Summary));
-                }
-            }
-
-            if (allConstructors.Count > 0)
-            {
-                Writer.WriteH2("Constructors");
-                Writer.WriteTableTitle("Name", "Summary");
-                foreach (var ctor in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
-                {
-                    var heading = typeData.Type.ToNameString() + ctor.Info.ToParametersString();
-                    heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
-                    Writer.WriteTableRow(
-                        heading,
-                        ProcessTags(ctor.Comments.Summary));
-                }
-            }
-
-            if (allMethods.Count > 0)
-            {
-                Writer.WriteH2("Methods");
-                Writer.WriteTableTitle("Name", "Returns", "Summary");
-                foreach (var method in allMethods
-                    .OrderBy(m => m.Info.Name)
-                    .ThenBy(m => m.Info.GetParameters().Length))
-                {
-                    var methodInfo = method.Info as MethodInfo;
-                    var heading = methodInfo.Name + methodInfo.ToParametersString();
-                    heading = DocumentMethodDetails ? Writer.HeadingLink(heading, Writer.Bold(heading)) : Writer.Bold(heading);
-                    Writer.WriteTableRow(
-                        heading,
-                        methodInfo.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(method.Comments.Summary));
-                }
-            }
-
-            if (allFields.Count > 0)
-            {
-                Writer.WriteH2("Fields");
-                Writer.WriteTableTitle("Name", "Type", "Summary");
-                foreach (var field in allFields)
-                {
-                    Writer.WriteTableRow(
-                        Writer.Bold(field.Info.Name),
-                        field.Info.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(field.Comments.Summary));
-                }
-            }
-
-            if (DocumentMethodDetails)
-            {
-                if (allConstructors.Count > 0)
-                {
-                    Writer.WriteH2("Constructors");
-                    foreach (var (info, comments) in allConstructors
-                        .OrderBy(m => m.Info.GetParameters().Length))
-                    {
-                        WriteMethodDetails(typeData.Type.ToNameString(), info, comments);
-                    }
-                }
-                if (allMethods.Count > 0)
-                {
-                    Writer.WriteH2("Methods");
-                    foreach (var (info, comments) in allMethods
-                        .OrderBy(m => m.Info.Name)
-                        .ThenBy(m => m.Info.GetParameters().Length))
-                    {
-                        WriteMethodDetails(info.Name, info, comments);
-                    }
-                }
-            }
-        }
-
-        private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
-        {
-            Writer.WriteH3(name + info.ToParametersString());
-            Writer.WriteLine(ProcessTags(comments.Summary));
-            if (comments.Parameters.Count > 0)
-            {
-                var parameters = info.GetParameters();
-                var i = 0;
-                Writer.WriteTableTitle("Parameter", "Type", "Description");
-                foreach (var (paramName, text) in comments.Parameters)
-                {
-                    Writer.WriteTableRow(paramName,
-                        parameters[i++].ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(text));
-                }
-            }
-            Writer.WriteLine("");
-
-            if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
-            {
-                Writer.WriteH3("Returns");
-                Writer.WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
-                Writer.WriteLine(ProcessTags(comments.Returns));
-            }
-            WriteExample(comments.Example);
-        }
-
-        public void WriteDocumentationForTypes()
-        {
-            foreach (var typeData in TypeList.TypesToDocument)
-            {
-                if (typeData.Type.IsEnum)
-                {
-                    WriteEnumDocumentation(typeData.Type);
-                    continue;
-                }
-                WriteClassDocumentation(typeData);
-            }
+            WriteLine(ProcessTags(summary));
         }
 
         public void WriteExample(string example)
         {
             if (example.IsNullOrEmpty()) return;
 
-            Writer.WriteH2("Examples");
-            Writer.WriteLine(ProcessTags(example));
+            WriteTitle("Examples");
+            WriteLine(ProcessTags(example));
         }
         public void WriteRemarks(string remarks)
         {
             if (remarks.IsNullOrEmpty()) return;
 
-            Writer.WriteH2("Remarks");
-            Writer.WriteLine(ProcessTags(remarks));
+            WriteTitle("Remarks");
+            WriteLine(ProcessTags(remarks));
         }
+        #endregion
+
+        #region Low level write functions
+        public void WriteBigTitle(string title)
+        {
+            OutputText.Append(Markdown.Heading(1, title));
+        }
+        public void WriteTitle(string title)
+        {
+            OutputText.Append(Markdown.Heading(2, title));
+        }
+        public void WriteSmallTitle(string title)
+        {
+            OutputText.Append(Markdown.Heading(3, title));
+        }
+        public void WriteTableTitle(params string[] tableHeadings)
+        {
+            OutputText.Append(Markdown.TableTitle(tableHeadings));
+        }
+        public void WriteTableRow(params string[] row)
+        {
+            OutputText.Append(Markdown.TableRow(row));
+        }
+        public void WriteLine(string text)
+        {
+            OutputText.Append(Markdown.WithNewline(text));
+        }
+        #endregion
     }
 }

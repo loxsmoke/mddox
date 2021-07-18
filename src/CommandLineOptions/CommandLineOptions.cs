@@ -19,13 +19,35 @@ namespace MdDox.CommandLineOptions
         public bool AllRecursive { get; set; }
         [Option('r', "recursive", Required = false, HelpText = "Step into specified referenced assemblies recursively.\nSpecify one or more assembly names separated by spaces.")]
         public IEnumerable<string> RecursiveAssemblies { get; set; }
-        [Option('m', "ignore-methods", Required = false, HelpText = "Do not generate documentation for methods and constructors.\nUseful for POCO documentation.")]
+        [Option("include", Required = false, HelpText =
+@"The list of space-separated filters of things to include in documentation.
+Filter by access: subject.visibility
+Subject is one of: [all, type, method, field, property]
+Visibility is one of: [all, public, protected, private]
+Example: all.public
+
+Filter by attribute: subject.attribute.attribute_name
+Subject is one of: [all, type, method, field, property]
+attribute_name is the name of the attribute.
+Example: field.attribute.JsonIgnoreAttribute
+
+Filter by name: subject.name.wildcard
+Subject is one of: [all, type, method, field, property]
+wildcard is a simple wildcard matching the name.
+Example: type.name.Hidden*")]
+        public IEnumerable<string> IncludeFilters { get; set; }
+        [Option("exclude", Required = false, HelpText =
+@"The list of space-separated filters of things to exclude from documentation.
+Syntax is the same as for include filters")]
+        public IEnumerable<string> ExcludeFilters { get; set; }
+
+        [Option('m', "ignore-methods", Required = false, HelpText = "[Deprecated] Do not generate documentation for methods and constructors.\nUseful for POCO documentation.")]
         public bool IgnoreMethods { get; set; }
         [Option('d', "method-details", Required = false, HelpText = "Generate detailed documentation for methods and constructors.\nSetting has no effect if --ignore-methods is specified.")]
         public bool DocumentMethodDetails { get; set; }
-        [Option('a', "ignore-attribute", Required = false, HelpText = "Do not generate documentation for properties with specified custom attribute(s).\nFor example JsonIgnoreAttribute\nMore than one space-separate attribute can be specified.")]
+        [Option('a', "ignore-attribute", Required = false, HelpText = "[Deprecated] Do not generate documentation for properties with specified custom attribute(s).\nFor example JsonIgnoreAttribute\nMore than one space-separate attribute can be specified.")]
         public IEnumerable<string> IgnoreAttributes { get; set; }
-        [Option('t', "type", Required = false, HelpText = "Document only the specified type and all types referenced by it.")]
+        [Option('t', "type", Required = false, HelpText = "[Deprecated] Document only the specified type and all types referenced by it.")]
         public string TypeName { get; set; }
         [Option('s', "msdn", Required = false, HelpText = "Generate links to the specified version of MSDN documentation for System.* and Microsoft.* types.\nThe documentation pages are located at this site https://docs.microsoft.com\nPossible versions can be latest, netcore-3.1, or net-5.0")]
         public string MsdnLinkViewParameter { get; set; }

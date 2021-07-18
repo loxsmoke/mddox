@@ -3,16 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using MdDox.MarkdownWriters;
-using MdDox.MarkdownWriters.Interfaces;
-using DocXml.Reflection;
-using LoxSmoke.DocXml;
-using LoxSmoke.DocXml.Reflection;
-using System.ComponentModel.DataAnnotations;
+using MdDox.MarkdownFormatters;
+using MdDox.MarkdownFormatters.Interfaces;
 using MdDox.CommandLineOptions;
+using MdDox.Reflection;
 
 namespace MdDox
 {
@@ -32,54 +26,72 @@ namespace MdDox
 
     class Program
     {
-        static CommandLineOptions.CommandLineOptions Parse(string [] args)
+        static (CommandLineOptions.CommandLineOptions,TypeFilterOptions) Parse(string [] args)
         {
             var result = CliProgram.Parse(args);
-            if (result.Tag == CommandLine.ParserResultType.NotParsed) return null;
-
-            var options = ((CommandLine.Parsed<CommandLineOptions.CommandLineOptions>)result).Value;
-            if (string.IsNullOrEmpty(options.Format))
-            {
-                options.Format = MarkdownWriters.First().FormatName;
-            }
-            if (options.IgnoreMethods)   options.DocumentMethodDetails = false;
-            if (options.AssemblyName != null && options.OutputFile == null)
-            {
-                options.OutputFile = Path.GetFileNameWithoutExtension(options.AssemblyName) + ".md";
-            }
-            return options;
-        }
-
-        static List<IMarkdownWriter> MarkdownWriters = new List<IMarkdownWriter>()
-        {
-            new GithubMarkdownWriter(),
-            new BitbucketMarkdownWriter()
-        };
-        static string MarkdownFormatNames => string.Join(",", MarkdownWriters.Select(md => md.FormatName));
-
-        static void Main(string[] args)
-        {
-            var options = Parse(args);
-            if (options == null)
-            {
-                return;
-            }
-
-            var writer = MarkdownWriters.FirstOrDefault(md => md.FormatName.Equals(options.Format, StringComparison.OrdinalIgnoreCase));
-
-            if (options.Format == null)
-            {
-                writer = MarkdownWriters.First();
-                Console.WriteLine($"Markdown format not specified. Assuming {writer.FormatName}.");
-            }
-            if (writer == null)
-            {
-                Console.WriteLine($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
-                return;
-            }
+            if (result.Tag == CommandLine.ParserResultType.NotParsed) return (null, null);
 
             try
             {
+                var options = ((CommandLine.Parsed<CommandLineOptions.CommandLineOptions>)result).Value;
+                if (string.IsNullOrEmpty(options.Format))
+                {
+                    options.Format = MarkdownWriters.First().Name;
+                    Console.WriteLine($"Markdown format not specified. Assuming {options.Format}.");
+                }
+                if (!MarkdownWriters.Any(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Console.WriteLine($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
+                    return (null, null);
+                }
+
+                if (options.IgnoreMethods) options.DocumentMethodDetails = false;
+                if (options.AssemblyName != null && options.OutputFile == null)
+                {
+                    options.OutputFile = Path.GetFileNameWithoutExtension(options.AssemblyName) + ".md";
+                }
+                var typeFilter = TypeFilterOptions.Parse(options.IncludeFilters, options.ExcludeFilters);
+                if (options.IgnoreMethods)
+                {
+                    typeFilter.Exclude.Add(new FilterItem() { FilterType = FilterType.Method, FilterScope = FilterScope.All });
+                }
+                foreach (var ignoreAttr in options.IgnoreAttributes)
+                {
+                    typeFilter.Exclude.Add(
+                        new FilterItem()
+                        {
+                            FilterType = FilterType.All,
+                            FilterScope = FilterScope.Attribute,
+                            FilterParameter = ignoreAttr
+                        });
+                }
+                return (options, typeFilter);
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine("Command line parse error: " + exc.Message);
+                return (null, null);
+            }
+        }
+
+        static List<IMarkdownFormatter> MarkdownWriters = new List<IMarkdownFormatter>()
+        {
+            new GithubMarkdownFormatter(),
+            new BitbucketMarkdownFormatter()
+        };
+        static string MarkdownFormatNames => string.Join(",", MarkdownWriters.Select(md => md.Name));
+
+        static void Main(string[] args)
+        {
+            try
+            {
+                var (options, typeFilterOptions) = Parse(args);
+                if (options == null)
+                {
+                    return;
+                }
+                var writer = MarkdownWriters.FirstOrDefault(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase));
+
                 if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
 
                 var fullAssemblyName = Path.GetFullPath(options.AssemblyName);
@@ -127,22 +139,27 @@ namespace MdDox
                     rootType, 
                     assembly, 
                     recursive, 
-                    options.RecursiveAssemblies.ToList(), 
-                    options.IgnoreAttributes.ToList(), 
-                    options.IgnoreMethods, 
+                    options.RecursiveAssemblies, 
+                    typeFilterOptions, 
                     options.Verbose);
 
-                DocumentationGenerator.GenerateMarkdown(
+                var docOptions = new DocumentationGeneratorOptions()
+                {
+                    DocumentTitle = GenerateTitle(assembly, options.DocumentTitle),
+                    DocumentMethodDetails = options.DocumentMethodDetails,
+                    ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
+                    MsdnLinks = msdnLinks,
+                    MsdnView = msdnView
+                };
+
+                var generator = new DocumentationGenerator(
                     typeList,
-                    GenerateTitle(assembly, options.DocumentTitle),
-                    !options.DoNotShowDocumentDateTime,
-                    options.DocumentMethodDetails,
-                    msdnLinks, 
-                    msdnView,
+                    docOptions,
                     writer);
+                generator.BuildDocument();
 
                 // Write markdown to the output file
-                File.WriteAllText(options.OutputFile, writer.FullText);
+                File.WriteAllText(options.OutputFile, generator.FullText);
             }
             catch (BadImageFormatException exc)
             {
@@ -200,6 +217,7 @@ namespace MdDox
         private static void ShowAssemblyLoaded(object sender, AssemblyLoadEventArgs args)
         {
             Console.WriteLine("Loaded assembly: " + args.LoadedAssembly.FullName);
+            Console.WriteLine("File path: " + args.LoadedAssembly.GetName().CodeBase);
         }
     }
 }
