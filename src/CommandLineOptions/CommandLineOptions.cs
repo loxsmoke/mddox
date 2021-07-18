@@ -47,7 +47,7 @@ Syntax is the same as for include filters")]
         public bool DocumentMethodDetails { get; set; }
         [Option('a', "ignore-attribute", Required = false, HelpText = "[Deprecated] Do not generate documentation for properties with specified custom attribute(s).\nFor example JsonIgnoreAttribute\nMore than one space-separate attribute can be specified.")]
         public IEnumerable<string> IgnoreAttributes { get; set; }
-        [Option('t', "type", Required = false, HelpText = "[Deprecated] Document only the specified type and all types referenced by it.")]
+        [Option('t', "type", Required = false, HelpText = "Document only the specified type and all types referenced by it.")]
         public string TypeName { get; set; }
         [Option('s', "msdn", Required = false, HelpText = "Generate links to the specified version of MSDN documentation for System.* and Microsoft.* types.\nThe documentation pages are located at this site https://docs.microsoft.com\nPossible versions can be latest, netcore-3.1, or net-5.0")]
         public string MsdnLinkViewParameter { get; set; }

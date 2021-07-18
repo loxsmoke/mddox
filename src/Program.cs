@@ -130,7 +130,7 @@ namespace MdDox
 
                 var msdnLinks = !string.IsNullOrEmpty(options.MsdnLinkViewParameter);
                 var msdnView = options.MsdnLinkViewParameter;
-                if (msdnLinks && msdnView.Equals("default", StringComparison.OrdinalIgnoreCase))
+                if (msdnLinks && msdnView.Equals("latest", StringComparison.OrdinalIgnoreCase))
                 {
                     msdnView = null;
                 }
