@@ -15,7 +15,8 @@ namespace MdDox.MarkdownFormatters
             text = text.Replace("&gt;", ">");
             text = text.Replace("&lt;", "<");
             text = text.Replace("|", "\\|");
-            return text.Replace(Environment.NewLine, "<br>");
+            text = text.Replace(Environment.NewLine, "<br>");
+            return text.Replace("\n", "<br>");
         }
 
         public override string HeadingLink(string anchorName, string text = null)

@@ -10,7 +10,7 @@ namespace MdDox.MarkdownFormatters
     public class MarkdownFormatter : IMarkdownFormatter
     {
         public virtual string Name => throw new NotImplementedException();
-        public string NewLine => Environment.NewLine + Environment.NewLine;
+        public string NewLine => "<br>";
         public string StartInlineCode => "`";
         public string EndInlineCode => "`";
         public string StartMultilineCode => "```" + Environment.NewLine;

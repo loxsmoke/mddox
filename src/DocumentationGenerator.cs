@@ -175,7 +175,7 @@ namespace MdDox
                 WriteTableTitle("Name", "Type", "Summary");
                 foreach (var (Info, Comments) in allProperties)
                 {
-                    WriteTableTitle(
+                    WriteTableRow(
                         Markdown.Bold(Info.Name),
                         Info.ToTypeNameString(typeLinkConverter, true),
                         ProcessTags(Comments.Summary));

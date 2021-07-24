@@ -128,12 +128,6 @@ namespace MdDox
                 var recursive = options.AllRecursive || options.RecursiveAssemblies.Any();
                 if (options.AllRecursive) options.RecursiveAssemblies = new List<string>();
 
-                var msdnLinks = !string.IsNullOrEmpty(options.MsdnLinkViewParameter);
-                var msdnView = options.MsdnLinkViewParameter;
-                if (msdnLinks && msdnView.Equals("latest", StringComparison.OrdinalIgnoreCase))
-                {
-                    msdnView = null;
-                }
                 var assembly = rootType == null ? myAssembly : null;
                 var typeList = OrderedTypeList.LoadTypes(
                     rootType, 
@@ -148,8 +142,10 @@ namespace MdDox
                     DocumentTitle = GenerateTitle(assembly, options.DocumentTitle),
                     DocumentMethodDetails = options.DocumentMethodDetails,
                     ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
-                    MsdnLinks = msdnLinks,
-                    MsdnView = msdnView
+                    MsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
+                    MsdnView = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
+                        options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase) 
+                        ? null : options.MsdnLinkViewParameter
                 };
 
                 var generator = new DocumentationGenerator(
