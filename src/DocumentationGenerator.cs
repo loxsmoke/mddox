@@ -188,7 +188,7 @@ namespace MdDox
                 WriteTableTitle("Name", "Summary");
                 foreach (var (Info, Comments) in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
-                    var heading = typeData.Type.ToNameString() + Info.ToParametersString();
+                    var heading = typeData.Type.ToNameString() + Info.ToParametersString(typeLinkConverter, true);
                     heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
                     WriteTableRow(heading, ProcessTags(Comments.Summary));
                 }
@@ -203,7 +203,10 @@ namespace MdDox
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
                     var methodInfo = Info as MethodInfo;
-                    var heading = methodInfo.Name + methodInfo.ToParametersString();
+
+                    var FuckingName = methodInfo.Name;
+
+                    var heading = methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true);
                     heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
                     WriteTableRow(heading,
                         methodInfo.ToTypeNameString(typeLinkConverter, true),

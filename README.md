@@ -74,3 +74,7 @@ Document one type and all referenced types from different assemblies
 mddox MyAssembly.dll --type ClassToDocument --recursive ReferencedAssembly1.dll --recursive ReferencedAssembly2.dll
 ```
 
+## Solutions
+
+There are two solutions in this repository. The **mddox.sln** solution includes DocXml nuget package. The **mddox-dev.sln** is development solution that includes full source of DocXml as git sub-module. 
+Sub-module can be updated to the latest version by running **git pull origin master** in the DocXml folder.

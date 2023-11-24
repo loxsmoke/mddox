@@ -213,7 +213,7 @@ namespace MdDox
         private static void ShowAssemblyLoaded(object sender, AssemblyLoadEventArgs args)
         {
             Console.WriteLine("Loaded assembly: " + args.LoadedAssembly.FullName);
-            Console.WriteLine("File path: " + args.LoadedAssembly.GetName().CodeBase);
+            Console.WriteLine("File path: " + args.LoadedAssembly.GetName().FullName);
         }
     }
 }
