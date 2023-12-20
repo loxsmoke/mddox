@@ -36,7 +36,7 @@ Optional parameters:
 Short format | Long format | Comment
 |---|---|---|
 | -**o** output_md |--**output** output_md  | The name of the markdown output file. |
-| -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket. |
+| -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket,azure. |
 |   | --**all-recursive**           | Step into all referenced assemblies recursively. |
 | -**r** assembly  | --**recursive** assembly | Step into specified referenced assemblies recursively.<br>Specify one or more assembly names separated by spaces. |
 | -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors.<br>Useful for POCO documentation. |
