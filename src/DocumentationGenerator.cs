@@ -100,7 +100,12 @@ namespace MdDox
 
         static string TypeTitle(Type type)
         {
-            return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
+            var complement = type.IsValueType ? " Struct" : " Class";
+            if (type.IsEnum)
+                complement = " Enum";
+            if (type.IsInterface)
+                complement = " Interface";
+            return type.ToNameString() + complement;
         }
 
         static (string cref, string innerText, string beforeText, string afterText) FindTagWithAttribute(
