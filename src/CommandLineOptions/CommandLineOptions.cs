@@ -13,7 +13,7 @@ namespace MdDox.CommandLineOptions
         public string AssemblyName { get; set; }
         [Option('o', "output", Required = false, HelpText = "Specify the name of the markdown output file.")]
         public string OutputFile { get; set; }
-        [Option('f', "format", Required = false, HelpText = "Specify the markdown file format. Valid values: github,bitbucket.")]
+        [Option('f', "format", Required = false, HelpText = "Specify the markdown file format. Valid values: github,bitbucket,azure.")]
         public string Format { get; set; }
         [Option("all-recursive", Required = false, HelpText = "Step into all referenced assemblies recursively.")]
         public bool AllRecursive { get; set; }

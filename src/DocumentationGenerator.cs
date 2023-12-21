@@ -393,8 +393,15 @@ namespace MdDox
 
         static string TypeTitle(Type type)
         {
-            return type.ToNameString() + (type.IsEnum ? " Enum" : (type.IsValueType ? " Struct" : " Class"));
+            string complement;
+            if (type.IsEnum) complement = " Enum";
+            else if (type.IsInterface) complement = " Interface";
+            else if (type.IsValueType) complement = " Struct";
+            else complement = " Class";
+
+            return type.ToNameString() + complement;
         }
+
         #endregion
 
         #region Simple formatted write functions

@@ -77,7 +77,8 @@ namespace MdDox
         static List<IMarkdownFormatter> MarkdownWriters = new List<IMarkdownFormatter>()
         {
             new GithubMarkdownFormatter(),
-            new BitbucketMarkdownFormatter()
+            new BitbucketMarkdownFormatter(),
+            new AzureMarkdownFormatter()
         };
         static string MarkdownFormatNames => string.Join(",", MarkdownWriters.Select(md => md.Name));
 

@@ -36,12 +36,14 @@ Optional parameters:
 Short format | Long format | Comment
 |---|---|---|
 | -**o** output_md |--**output** output_md  | The name of the markdown output file. |
-| -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket. |
+| -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket,azure. |
 |   | --**all-recursive**           | Step into all referenced assemblies recursively. |
 | -**r** assembly  | --**recursive** assembly | Step into specified referenced assemblies recursively.<br>Specify one or more assembly names separated by spaces. |
-| -**m**  | --**ignore-methods**      | Do not generate documentation for methods and constructors.<br>Useful for POCO documentation. |
+|   | --**include** stuff | The list of space-separated filters of things to include in documentation.<br>Filter by access: subject.visibility<br>Subject is one of: [all, type, method, field, property]<br>Visibility is one of: [all, public, protected, private]<br>Example: all.public<br><br>Filter by attribute: subject.attribute.attribute_name<br>Subject is one of: [all, type, method, field, property]<br>attribute_name is the name of the attribute.<br>Example: field.attribute.JsonIgnoreAttribute<br><br>Filter by name: subject.name.wildcard<br>Subject is one of: [all, type, method, field, property]<br>wildcard is a simple wildcard matching the name.<br>Example: type.name.Hidden*<br> |
+|   | --**exclude** stuff | The list of space-separated filters of things to exclude from documentation.<br>Syntax is the same as for include filters |
+| -**m**  | --**ignore-methods**      | Deprecated. Replaced with --exclude method.all. Do not generate documentation for methods and constructors.<br>Useful for POCO documentation. |
 | -**d**  | --**method-details**      | Generate detailed documentation for methods and constructors.<br>Setting has no effect if --ignore-methods is specified. |
-| -**a** name  | --**ignore-attribute** name | Do not generate documentation for properties with specified custom attribute(s).<br>For example JsonIgnoreAttribute<br>More than one space-separate attribute can be specified. |
+| -**a** name  | --**ignore-attribute** name | Deprecated. Replaced with --exclude all.attribute.name. Do not generate documentation for properties with specified custom attribute(s).<br>For example JsonIgnoreAttribute<br>More than one space-separate attribute can be specified. |
 | -**t** name  | --**type** name         | Document only the specified type and all types referenced by it. |
 | -**s** view  | --**msdn** view     | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View specifies what version of the type to show. Use **latest**, **netcore-3.1**, or **net-5.0** |  
 | -**i** "title" | --**title** "title"   | Document title. Use {assembly} and {version} in the format string to insert the name of the assembly and assembly version. |
@@ -59,13 +61,13 @@ mddox MyAssembly.dll
 Documenting only fields and properties of all types in assembly
 
 ```bash
-mddox MyAssembly.dll --ignore-methods
+mddox MyAssembly.dll --exclude method.all
 ```
 
 Documenting types that do not have specified custom attributes
 
 ```bash
-mddox MyAssembly.dll --ignore-attribute JsonIgnoreAttribute --ignore-attribute XmlIgnore
+mddox MyAssembly.dll --exclude all.attribute.JsonIgnoreAttribute --exclude all.attribute.XmlIgnore
 ```
 
 Document one type and all referenced types from different assemblies 
