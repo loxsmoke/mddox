@@ -177,7 +177,7 @@ namespace MdDox
             if (format == null && assembly == null) return null;
             var assemblyName = assembly == null ? "" : Path.GetFileName(assembly.ManifestModule.Name);
             var version = assembly == null ? "" : ("v." + assembly.GetName().Version);
-            if (format == null) format = "{assembly} {version} API documentation";
+            if (format == null) format = "{assembly} {version} " + "API documentation".GetLocalized();
             return format.Replace("{assembly}", assemblyName).Replace("{version}", version);
         }
 

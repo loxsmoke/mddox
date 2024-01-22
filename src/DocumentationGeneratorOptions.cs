@@ -11,7 +11,6 @@ namespace MdDox
         public bool ShowDocumentDateTime { get; set; }
         public bool MsdnLinks { get; set; }
         public string MsdnView { get; set; }
-        public string TypeIndexTitle { get; set; } = "All types";
         public int TypeIndexColumnCount { get; set; } = 3;
     }
 }

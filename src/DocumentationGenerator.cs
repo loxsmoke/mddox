@@ -51,7 +51,6 @@ namespace MdDox
             TypeList = typeList;
             Options = options;
             Markdown = writer;
-
             typeLinkConverter = (type, _) => TypeNameWithLinks(type, options.MsdnLinks, options.MsdnView);
         }
 
@@ -61,7 +60,7 @@ namespace MdDox
             OutputText.Clear();
             WriteDocumentTitle(Options.DocumentTitle);
             WritedDateLine();
-            WriteTypeIndex(Options.TypeIndexTitle, Options.TypeIndexColumnCount);
+            WriteTypeIndex("All types".GetLocalized(), Options.TypeIndexColumnCount);
             foreach (var typeData in TypeList.TypesToDocument)
             {
                 WriteTypeDocumentation(typeData);
@@ -134,8 +133,9 @@ namespace MdDox
 
             if (enumComments.ValueComments.Count > 0)
             {
-                WriteTitle("Values");
-                WriteTableTitle("Name", "Summary");
+
+                WriteTitle("Values".GetLocalized());
+                WriteTableTitle("Name".GetLocalized(), "Summary".GetLocalized());
                 foreach (var prop in enumComments.ValueComments)
                 {
                     WriteTableRow(Markdown.Bold(prop.Name), ProcessTags(prop.Summary));
@@ -156,7 +156,7 @@ namespace MdDox
                 typeData.Type.BaseType != typeof(Object) &&
                 typeData.Type.BaseType != typeof(ValueType))
             {
-                WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
+                WriteLine("Base class: ".GetLocalized() + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
             }
 
             var typeComments = Reader.GetTypeComments(typeData.Type);
@@ -171,8 +171,9 @@ namespace MdDox
             var allFields = Reader.Comments(typeData.Fields).ToList();
             if (allProperties.Count > 0)
             {
-                WriteTitle("Properties");
-                WriteTableTitle("Name", "Type", "Summary");
+
+                WriteTitle("Properties".GetLocalized());
+                WriteTableTitle("Name".GetLocalized(), "Type".GetLocalized(), "Summary".GetLocalized());
                 foreach (var (Info, Comments) in allProperties)
                 {
                     WriteTableRow(
@@ -184,8 +185,8 @@ namespace MdDox
 
             if (allConstructors.Count > 0)
             {
-                WriteTitle("Constructors");
-                WriteTableTitle("Name", "Summary");
+                WriteTitle("Constructors".GetLocalized());
+                WriteTableTitle("Name".GetLocalized(), "Summary".GetLocalized());
                 foreach (var (Info, Comments) in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
                     var heading = typeData.Type.ToNameString() + Info.ToParametersString(typeLinkConverter, true);
@@ -196,8 +197,8 @@ namespace MdDox
 
             if (allMethods.Count > 0)
             {
-                WriteTitle("Methods");
-                WriteTableTitle("Name", "Returns", "Summary");
+                WriteTitle("Methods".GetLocalized());
+                WriteTableTitle("Name".GetLocalized(), "Returns".GetLocalized(), "Summary".GetLocalized());
                 foreach (var (Info, Comments) in allMethods
                     .OrderBy(m => m.Info.Name)
                     .ThenBy(m => m.Info.GetParameters().Length))
@@ -216,8 +217,9 @@ namespace MdDox
 
             if (allFields.Count > 0)
             {
-                WriteTitle("Fields");
-                WriteTableTitle("Name", "Type", "Summary");
+
+                WriteTitle("Fields".GetLocalized());
+                WriteTableTitle("Name".GetLocalized(), "Type".GetLocalized(), "Summary".GetLocalized());
                 foreach (var (Info, Comments) in allFields)
                 {
                     WriteTableRow(
@@ -231,7 +233,7 @@ namespace MdDox
             {
                 if (allConstructors.Count > 0)
                 {
-                    WriteTitle("Constructors");
+                    WriteTitle("Constructors".GetLocalized());
                     foreach (var (info, comments) in allConstructors
                         .OrderBy(m => m.Info.GetParameters().Length))
                     {
@@ -240,7 +242,7 @@ namespace MdDox
                 }
                 if (allMethods.Count > 0)
                 {
-                    WriteTitle("Methods");
+                    WriteTitle("Methods".GetLocalized());
                     foreach (var (info, comments) in allMethods
                         .OrderBy(m => m.Info.Name)
                         .ThenBy(m => m.Info.GetParameters().Length))
@@ -259,7 +261,8 @@ namespace MdDox
             {
                 var parameters = info.GetParameters();
                 var i = 0;
-                WriteTableTitle("Parameter", "Type", "Description");
+                
+                WriteTableTitle("Parameter".GetLocalized(), "Type".GetLocalized(), "Description".GetLocalized());
                 foreach (var (paramName, text) in comments.Parameters)
                 {
                     WriteTableRow(paramName,
@@ -271,7 +274,7 @@ namespace MdDox
 
             if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
             {
-                WriteSmallTitle("Returns");
+                WriteSmallTitle("Returns".GetLocalized());
                 WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
                 WriteSummary(comments.Returns);
             }
@@ -394,10 +397,11 @@ namespace MdDox
         static string TypeTitle(Type type)
         {
             string complement;
-            if (type.IsEnum) complement = " Enum";
-            else if (type.IsInterface) complement = " Interface";
-            else if (type.IsValueType) complement = " Struct";
-            else complement = " Class";
+            
+            if (type.IsEnum) complement = " Enum".GetLocalized();
+            else if (type.IsInterface) complement = " Interface".GetLocalized();
+            else if (type.IsValueType) complement = " Struct".GetLocalized();
+            else complement = " Class".GetLocalized();
 
             return type.ToNameString() + complement;
         }
@@ -408,7 +412,8 @@ namespace MdDox
         public void WriteTypeTitle(Type type)
         {
             WriteBigTitle(TypeTitle(type));
-            WriteLine("Namespace: " + type.Namespace);
+
+            WriteLine("Namespace: ".GetLocalized() + type.Namespace);
         }
 
         public void WriteSummary(string summary)
@@ -420,14 +425,14 @@ namespace MdDox
         {
             if (example.IsNullOrEmpty()) return;
 
-            WriteTitle("Examples");
+            WriteTitle("Examples".GetLocalized());
             WriteLine(ProcessTags(example));
         }
         public void WriteRemarks(string remarks)
         {
             if (remarks.IsNullOrEmpty()) return;
 
-            WriteTitle("Remarks");
+            WriteTitle("Remarks".GetLocalized());
             WriteLine(ProcessTags(remarks));
         }
         #endregion
