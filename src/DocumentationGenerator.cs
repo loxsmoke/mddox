@@ -411,6 +411,7 @@ namespace MdDox
         #region Simple formatted write functions
         public void WriteTypeTitle(Type type)
         {
+            WriteLine($"<a id=\"{type.ToNameString().ToLower()}-\"></a>");
             WriteBigTitle(TypeTitle(type));
 
             WriteLine("Namespace: ".GetLocalized() + type.Namespace);
