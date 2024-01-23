@@ -57,5 +57,7 @@ Syntax is the same as for include filters")]
         public bool DoNotShowDocumentDateTime { get; set; }
         [Option('v', "verbose", Required = false, HelpText = "Print some debug info when generating documentation.")]
         public bool Verbose { get; set; }
+        [Option('l', "language", Required = false, HelpText = "Generate output using specified language. Example: en-us")]
+        public string OutputLanguage { get; set; }
     }
 }

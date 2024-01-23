@@ -49,6 +49,7 @@ Short format | Long format | Comment
 | -**i** "title" | --**title** "title"   | Document title. Use {assembly} and {version} in the format string to insert the name of the assembly and assembly version. |
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
 | -**v**  | --**verbose**             | Print some debug info when generating documentation. It may help troubleshooting some issues such as missing type information of referenced assemblies. |
+| -**l**  | --**language** "language-code"            | Generate output using specified language. Available languages: en-us,   |
   
 For best results enable XML documentation build switch in your project and use publish build to get all referenced assemblies in one folder.
 

@@ -12,6 +12,8 @@ using static DocXml.Reflection.ReflectionExtensions;
 using MdDox.MarkdownFormatters.Interfaces;
 using MdDox.Reflection;
 using System.Text;
+using mddox.Localization.Interfaces;
+using CommandLine;
 
 namespace MdDox
 {
@@ -61,7 +63,7 @@ namespace MdDox
             OutputText.Clear();
             WriteDocumentTitle(Options.DocumentTitle);
             WritedDateLine();
-            WriteTypeIndex(Options.TypeIndexTitle, Options.TypeIndexColumnCount);
+            WriteTypeIndex(Options.Strings.AllTypes, Options.TypeIndexColumnCount);
             foreach (var typeData in TypeList.TypesToDocument)
             {
                 WriteTypeDocumentation(typeData);
@@ -77,8 +79,8 @@ namespace MdDox
         public void WritedDateLine()
         {
             if (!Options.ShowDocumentDateTime) return;
-            WriteLine("Created by " + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
-                $" on {DateTime.Now.ToShortDateString()}");
+            WriteLine(Options.Strings.CreatedBy + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
+                $"{Options.Strings.CreatedByOn}{DateTime.Now.ToShortDateString()}");
         }
 
         /// <summary>
@@ -100,7 +102,7 @@ namespace MdDox
                 for (var j = 0; j < columnCount && j + i < TypeList.TypesToDocument.Count; j++)
                 {
                     var typeData = TypeList.TypesToDocument[i + j];
-                    row[j] = Markdown.HeadingLink(TypeTitle(typeData.Type), TypeTitle(typeData.Type));
+                    row[j] = Markdown.HeadingLink(TypeTitle(typeData.Type, Options.Strings), TypeTitle(typeData.Type, Options.Strings));
                 }
                 WriteTableRow(row);
             }
@@ -134,8 +136,8 @@ namespace MdDox
 
             if (enumComments.ValueComments.Count > 0)
             {
-                WriteTitle("Values");
-                WriteTableTitle("Name", "Summary");
+                WriteTitle(Options.Strings.Values);
+                WriteTableTitle(Options.Strings.Name, Options.Strings.Summary);
                 foreach (var prop in enumComments.ValueComments)
                 {
                     WriteTableRow(Markdown.Bold(prop.Name), ProcessTags(prop.Summary));
@@ -156,7 +158,7 @@ namespace MdDox
                 typeData.Type.BaseType != typeof(Object) &&
                 typeData.Type.BaseType != typeof(ValueType))
             {
-                WriteLine("Base class: " + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
+                WriteLine(Options.Strings.BaseClass + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
             }
 
             var typeComments = Reader.GetTypeComments(typeData.Type);
@@ -171,8 +173,8 @@ namespace MdDox
             var allFields = Reader.Comments(typeData.Fields).ToList();
             if (allProperties.Count > 0)
             {
-                WriteTitle("Properties");
-                WriteTableTitle("Name", "Type", "Summary");
+                WriteTitle(Options.Strings.Properties);
+                WriteTableTitle(Options.Strings.Name, Options.Strings.Type, Options.Strings.Summary);
                 foreach (var (Info, Comments) in allProperties)
                 {
                     WriteTableRow(
@@ -184,8 +186,8 @@ namespace MdDox
 
             if (allConstructors.Count > 0)
             {
-                WriteTitle("Constructors");
-                WriteTableTitle("Name", "Summary");
+                WriteTitle(Options.Strings.Constructors);
+                WriteTableTitle(Options.Strings.Name, Options.Strings.Summary);
                 foreach (var (Info, Comments) in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
                     var heading = typeData.Type.ToNameString() + Info.ToParametersString(typeLinkConverter, true);
@@ -196,8 +198,8 @@ namespace MdDox
 
             if (allMethods.Count > 0)
             {
-                WriteTitle("Methods");
-                WriteTableTitle("Name", "Returns", "Summary");
+                WriteTitle(Options.Strings.Methods);
+                WriteTableTitle(Options.Strings.Name, Options.Strings.Returns, Options.Strings.Summary);
                 foreach (var (Info, Comments) in allMethods
                     .OrderBy(m => m.Info.Name)
                     .ThenBy(m => m.Info.GetParameters().Length))
@@ -216,8 +218,8 @@ namespace MdDox
 
             if (allFields.Count > 0)
             {
-                WriteTitle("Fields");
-                WriteTableTitle("Name", "Type", "Summary");
+                WriteTitle(Options.Strings.Fields);
+                WriteTableTitle(Options.Strings.Name, Options.Strings.Type, Options.Strings.Summary);
                 foreach (var (Info, Comments) in allFields)
                 {
                     WriteTableRow(
@@ -231,7 +233,7 @@ namespace MdDox
             {
                 if (allConstructors.Count > 0)
                 {
-                    WriteTitle("Constructors");
+                    WriteTitle(Options.Strings.Constructors);
                     foreach (var (info, comments) in allConstructors
                         .OrderBy(m => m.Info.GetParameters().Length))
                     {
@@ -240,7 +242,7 @@ namespace MdDox
                 }
                 if (allMethods.Count > 0)
                 {
-                    WriteTitle("Methods");
+                    WriteTitle(Options.Strings.Methods);
                     foreach (var (info, comments) in allMethods
                         .OrderBy(m => m.Info.Name)
                         .ThenBy(m => m.Info.GetParameters().Length))
@@ -259,7 +261,7 @@ namespace MdDox
             {
                 var parameters = info.GetParameters();
                 var i = 0;
-                WriteTableTitle("Parameter", "Type", "Description");
+                WriteTableTitle(Options.Strings.Parameter, Options.Strings.Type, Options.Strings.Description);
                 foreach (var (paramName, text) in comments.Parameters)
                 {
                     WriteTableRow(paramName,
@@ -271,7 +273,7 @@ namespace MdDox
 
             if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
             {
-                WriteSmallTitle("Returns");
+                WriteSmallTitle(Options.Strings.Returns);
                 WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
                 WriteSummary(comments.Returns);
             }
@@ -284,7 +286,7 @@ namespace MdDox
         {
             if (TypeList.TypesToDocumentSet.Contains(type))
             {
-                return Markdown.HeadingLink(TypeTitle(type), 
+                return Markdown.HeadingLink(TypeTitle(type, Options.Strings), 
                     type.IsGenericTypeDefinition ?  type.Name.CleanGenericTypeName() : type.ToNameString());
             }
             if (msdnLinks &&
@@ -293,7 +295,7 @@ namespace MdDox
                 (type.Assembly.ManifestModule.Name.StartsWith("System.") ||
                 type.Assembly.ManifestModule.Name.StartsWith("Microsoft.")))
             {
-                return Markdown.Link(MsdnUrlForType(type, msdnView),
+                return Markdown.Link(MsdnUrlForType(type, msdnView, Options.MsdnCultureName),
                     type.IsGenericTypeDefinition ? type.Name.CleanGenericTypeName() : type.ToNameString());
             }
             if (type.IsGenericTypeDefinition)
@@ -368,7 +370,7 @@ namespace MdDox
 
         static string FixCref(string crefText)
         {
-            if (!crefText.Contains(":")) return crefText;
+            if (!crefText.Contains(':')) return crefText;
             // XML doc Id
             return crefText.Substring(crefText.IndexOf(":") + 1);
         }
@@ -380,24 +382,25 @@ namespace MdDox
         /// <param name="view">The documentation framework version parameter.
         /// For example netcore-3.1, netframework-4.8, netstandard-2.1, and so on.
         /// If not specified then view parameter is omitted.</param>
+        /// <param name="locale">The locale of the documentation.
+        /// For example en-us</param>
         /// <returns>URL to the type documentation page</returns>
-        static string MsdnUrlForType(Type type, string view = null)
+        static string MsdnUrlForType(Type type, string view, string locale)
         {
-            var docLocale = "en-us";
             var urlParameters = view.IsNullOrEmpty() ? "" : $"?view={view}";
             var typeNameFragment = type.FullName.ToLowerInvariant();
             if (typeNameFragment.Contains('`')) typeNameFragment = typeNameFragment.Replace('`', '-');
-            var url = $"https://docs.microsoft.com/{docLocale}/dotnet/api/{typeNameFragment}{urlParameters}";
+            var url = $"https://docs.microsoft.com/{locale.ToLower()}/dotnet/api/{typeNameFragment}{urlParameters}";
             return url;
         }
 
-        static string TypeTitle(Type type)
+        static string TypeTitle(Type type, ILocalizedStrings localizedStrings)
         {
             string complement;
-            if (type.IsEnum) complement = " Enum";
-            else if (type.IsInterface) complement = " Interface";
-            else if (type.IsValueType) complement = " Struct";
-            else complement = " Class";
+            if (type.IsEnum) complement = localizedStrings.Enum;
+            else if (type.IsInterface) complement = localizedStrings.Interface;
+            else if (type.IsValueType) complement = localizedStrings.Struct;
+            else complement = localizedStrings.Class;
 
             return type.ToNameString() + complement;
         }
@@ -407,8 +410,8 @@ namespace MdDox
         #region Simple formatted write functions
         public void WriteTypeTitle(Type type)
         {
-            WriteBigTitle(TypeTitle(type));
-            WriteLine("Namespace: " + type.Namespace);
+            WriteBigTitle(TypeTitle(type, Options.Strings));
+            WriteLine(Options.Strings.Namespace + type.Namespace);
         }
 
         public void WriteSummary(string summary)
@@ -420,14 +423,14 @@ namespace MdDox
         {
             if (example.IsNullOrEmpty()) return;
 
-            WriteTitle("Examples");
+            WriteTitle(Options.Strings.Examples);
             WriteLine(ProcessTags(example));
         }
         public void WriteRemarks(string remarks)
         {
             if (remarks.IsNullOrEmpty()) return;
 
-            WriteTitle("Remarks");
+            WriteTitle(Options.Strings.Remarks);
             WriteLine(ProcessTags(remarks));
         }
         #endregion

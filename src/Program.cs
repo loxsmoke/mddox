@@ -7,6 +7,9 @@ using MdDox.MarkdownFormatters;
 using MdDox.MarkdownFormatters.Interfaces;
 using MdDox.CommandLineOptions;
 using MdDox.Reflection;
+using System.Globalization;
+using mddox.Localization;
+using mddox.Localization.Interfaces;
 
 namespace MdDox
 {
@@ -43,6 +46,19 @@ namespace MdDox
                 {
                     Console.WriteLine($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
                     return (null, null);
+                }
+
+                if (!string.IsNullOrEmpty(options.OutputLanguage))
+                {
+                    if (!LocalizedStrings.Any(ls => ls.CultureName.Equals(options.OutputLanguage, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        Console.WriteLine($"Error: invalid language specified. Valid values: {LocalizedStringsCultureNames}");
+                        return (null, null);
+                    }
+                }
+                else if (!LocalizedStrings.Any(ls => ls.CultureName.Equals(CultureInfo.CurrentCulture.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Console.WriteLine($"Assuming default language. No translations for current culture: {CultureInfo.CurrentCulture.Name}.");
                 }
 
                 if (options.IgnoreMethods) options.DocumentMethodDetails = false;
@@ -82,6 +98,13 @@ namespace MdDox
         };
         static string MarkdownFormatNames => string.Join(",", MarkdownWriters.Select(md => md.Name));
 
+        static List<ILocalizedStrings> LocalizedStrings = new List<ILocalizedStrings>()
+        {
+            new LocalizedStrings(), // Default en-us
+            new LocalizedStringsZhCn()
+        };
+        static string LocalizedStringsCultureNames => string.Join(",", LocalizedStrings.Select(md => md.CultureName));
+
         static void Main(string[] args)
         {
             try
@@ -91,6 +114,7 @@ namespace MdDox
                 {
                     return;
                 }
+
                 var writer = MarkdownWriters.FirstOrDefault(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase));
 
                 if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
@@ -138,15 +162,20 @@ namespace MdDox
                     typeFilterOptions, 
                     options.Verbose);
 
+                var localizedStrings = LocalizedStrings.FirstOrDefault(ls => ls.CultureName.Equals(options.OutputLanguage, StringComparison.OrdinalIgnoreCase))
+                    ?? LocalizedStrings.First();
+
                 var docOptions = new DocumentationGeneratorOptions()
                 {
-                    DocumentTitle = GenerateTitle(assembly, options.DocumentTitle),
+                    Strings = localizedStrings,
+                    DocumentTitle = GenerateTitle(assembly, options.DocumentTitle, localizedStrings),
                     DocumentMethodDetails = options.DocumentMethodDetails,
                     ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
                     MsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
                     MsdnView = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
                         options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase) 
-                        ? null : options.MsdnLinkViewParameter
+                        ? null : options.MsdnLinkViewParameter,
+                    MsdnCultureName = localizedStrings.CultureName.ToLower()
                 };
 
                 var generator = new DocumentationGenerator(
@@ -172,12 +201,12 @@ namespace MdDox
             }
         }
 
-        protected static string GenerateTitle(Assembly assembly, string format)
+        protected static string GenerateTitle(Assembly assembly, string format, ILocalizedStrings localizedStrings)
         {
             if (format == null && assembly == null) return null;
             var assemblyName = assembly == null ? "" : Path.GetFileName(assembly.ManifestModule.Name);
-            var version = assembly == null ? "" : ("v." + assembly.GetName().Version);
-            if (format == null) format = "{assembly} {version} API documentation";
+            var version = assembly == null ? "" : (localizedStrings.VersionPrefix + assembly.GetName().Version);
+            if (format == null) format = localizedStrings.DefaultTitleFormat;
             return format.Replace("{assembly}", assemblyName).Replace("{version}", version);
         }
 
