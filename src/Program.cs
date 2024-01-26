@@ -100,8 +100,8 @@ namespace MdDox
 
         static List<ILocalizedStrings> LocalizedStrings = new List<ILocalizedStrings>()
         {
-            new LocalizedStrings(), // Default en-us
-            new LocalizedStringsZhCn()
+            new LocalizedStrings(), 	// Default en-us
+            new LocalizedStringsZhCn()  // zh-cn
         };
         static string LocalizedStringsCultureNames => string.Join(",", LocalizedStrings.Select(md => md.CultureName));
 
