@@ -29,14 +29,26 @@ namespace MdDox
 
     class Program
     {
-        static (CommandLineOptions.CommandLineOptions,TypeFilterOptions) Parse(string [] args)
+        static public void WriteError(string error)
+        {
+            var oldBackgournd = Console.BackgroundColor;
+            var oldForeground = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.Write(error);
+            Console.ForegroundColor = oldForeground;
+            Console.BackgroundColor = oldBackgournd;
+            Console.WriteLine();
+        }
+
+        static (CommandLineOptions.CommandLineOptions, TypeFilterOptions) Parse(string [] args)
         {
             var result = CliProgram.Parse(args);
             if (result.Tag == CommandLine.ParserResultType.NotParsed) return (null, null);
 
             try
             {
-                var options = ((CommandLine.Parsed<CommandLineOptions.CommandLineOptions>)result).Value;
+                CommandLineOptions.CommandLineOptions options = result.Value;
                 if (string.IsNullOrEmpty(options.Format))
                 {
                     options.Format = MarkdownWriters.First().Name;
@@ -44,15 +56,26 @@ namespace MdDox
                 }
                 if (!MarkdownWriters.Any(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase)))
                 {
-                    Console.WriteLine($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
+                    WriteError($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
                     return (null, null);
+                }
+
+                if (!string.IsNullOrEmpty(options.MsdnLinkViewParameter))
+                {
+                    List<string> validPrefixes = ["net-", "netcore-", "netframework-", "netstandard-", "dotnet-uwp-"];
+                    if (!options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase) &&
+                        !validPrefixes.Any(prefix => options.MsdnLinkViewParameter.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        WriteError($"Error: invalid MSDN view string. Expected \"latest\" or string starting with one of: {string.Join(" ", validPrefixes)}");
+                        return (null, null);
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(options.OutputLanguage))
                 {
                     if (!LocalizedStrings.Any(ls => ls.CultureName.Equals(options.OutputLanguage, StringComparison.OrdinalIgnoreCase)))
                     {
-                        Console.WriteLine($"Error: invalid language specified. Valid values: {LocalizedStringsCultureNames}");
+                        WriteError($"Error: invalid language specified. Valid values: {LocalizedStringsCultureNames}");
                         return (null, null);
                     }
                 }
@@ -85,7 +108,7 @@ namespace MdDox
             }
             catch (Exception exc)
             {
-                Console.WriteLine("Command line parse error: " + exc.Message);
+                WriteError("Command line parse error: " + exc.Message);
                 return (null, null);
             }
         }
@@ -171,9 +194,9 @@ namespace MdDox
                     DocumentTitle = GenerateTitle(assembly, options.DocumentTitle, localizedStrings),
                     DocumentMethodDetails = options.DocumentMethodDetails,
                     ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
-                    MsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
-                    MsdnView = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
-                        options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase) 
+                    AddMsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
+                    MsdnViewParameter = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
+                        options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase)
                         ? null : options.MsdnLinkViewParameter,
                     MsdnCultureName = localizedStrings.CultureName.ToLower()
                 };
@@ -189,15 +212,15 @@ namespace MdDox
             }
             catch (BadImageFormatException exc)
             {
-                Console.WriteLine($"Error: {exc.Message}");
-                Console.WriteLine($"Hresult:{exc.HResult}");
-                if (!exc.HelpLink.IsNullOrEmpty()) Console.WriteLine($"Help link: {exc.HelpLink}");
-                Console.WriteLine($"{exc.StackTrace}");
+                WriteError($"Error: {exc.Message}");
+                WriteError($"Hresult:{exc.HResult}");
+                if (!exc.HelpLink.IsNullOrEmpty()) WriteError($"Help link: {exc.HelpLink}");
+                WriteError($"{exc.StackTrace}");
             }
             catch (Exception exc)
             {
-                Console.WriteLine($"Error: {exc.Message}");
-                Console.WriteLine($"{exc.StackTrace}");
+                WriteError($"Error: {exc.Message}");
+                WriteError($"{exc.StackTrace}");
             }
         }
 

@@ -54,7 +54,7 @@ namespace MdDox
             Options = options;
             Markdown = writer;
 
-            typeLinkConverter = (type, _) => TypeNameWithLinks(type, options.MsdnLinks, options.MsdnView);
+            typeLinkConverter = (type, _) => TypeNameWithLinks(type, options.AddMsdnLinks, options.MsdnViewParameter);
         }
 
         #region Top level document build functions

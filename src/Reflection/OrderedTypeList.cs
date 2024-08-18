@@ -203,7 +203,6 @@ namespace MdDox.Reflection
             if (attrs.HasFlag(FieldAttributes.Static)) text = text.Add("Static");
             if (attrs.HasFlag(FieldAttributes.InitOnly)) text = text.Add("InitOnly");
             if (attrs.HasFlag(FieldAttributes.Literal)) text = text.Add("Literal");
-            if (attrs.HasFlag(FieldAttributes.NotSerialized)) text = text.Add("NotSerialized");
             if (attrs.HasFlag(FieldAttributes.HasFieldRVA)) text = text.Add("HasFieldRVA");
             if (attrs.HasFlag(FieldAttributes.SpecialName)) text = text.Add("SpecialName");
             if (attrs.HasFlag(FieldAttributes.RTSpecialName)) text = text.Add("RTSpecialName");

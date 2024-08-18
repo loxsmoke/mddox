@@ -14,11 +14,11 @@ namespace MdDox
         /// <summary>
         /// Trur if MSDN links should be generated.
         /// </summary>
-        public bool MsdnLinks { get; set; }
+        public bool AddMsdnLinks { get; set; }
         /// <summary>
         /// Which version of the framework to link to.
         /// </summary>
-        public string MsdnView { get; set; }
+        public string MsdnViewParameter { get; set; }
         /// <summary>
         /// The locale for the MSDN pages.
         /// </summary>

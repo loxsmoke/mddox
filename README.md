@@ -55,7 +55,7 @@ Short format | Long format | Comment
 | -**d**  | --**method-details**      | Generate detailed documentation for methods and constructors.<br>Setting has no effect if --ignore-methods is specified. |
 | -**a** name  | --**ignore-attribute** name | Deprecated. Replaced with --exclude all.attribute.name. Do not generate documentation for properties with specified custom attribute(s).<br>For example JsonIgnoreAttribute<br>More than one space-separate attribute can be specified. |
 | -**t** name  | --**type** name         | Document only the specified type and all types referenced by it. |
-| -**s** view  | --**msdn** view     | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View specifies what version of the type to show. Use **latest**, **netcore-3.1**, or **net-5.0** |  
+| -**s** view  | --**msdn** view     | Generate links to the MSDN documentation for System.* and Microsoft.* types.<br>The documentation pages are located at this site https://docs.microsoft.com<br>View specifies what version of the type to show.<br>Examples: **latest**, **netcore-3.1**, **net-8.0**, **netstandard-2.1** |  
 | -**i** "title" | --**title** "title"   | Document title. Use {assembly} and {version} in the format string to insert the name of the assembly and assembly version. |
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
 | -**v**  | --**verbose**             | Print some debug info when generating documentation. It may help troubleshooting some issues such as missing type information of referenced assemblies. |
