@@ -22,10 +22,12 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build the project
-        run: dotnet build --c Release
+        run: dotnet build -c Release
+        working-directory: src
 
       - name: Publish to NuGet.org
         env:
           NUGET_API_KEY: ${{ secrets.LOXSMOKE_NUGET_API_KEY }}
         run: dotnet nuget push ./nupkg/*.nupkg --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+        working-directory: src
         
