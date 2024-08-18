@@ -22,7 +22,7 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build the project
-        run: dotnet build -c Release
+        run: dotnet build mddox.csproj -c Release
         working-directory: src
 
       - name: Publish to NuGet.org
