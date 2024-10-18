@@ -128,7 +128,7 @@ namespace MdDox.Reflection
 
             if (recursiveAssemblies == null) return true;
 
-            if (!recursiveAssemblies.Any(name => name.Equals(Path.GetFileName(assembly.Location), StringComparison.OrdinalIgnoreCase)))
+            if (!recursiveAssemblies.Any(name => name.EqualsIgnoreCase(Path.GetFileName(assembly.Location))))
             {
                 if (!verbose) return false;
                 Log(assembly, "Assembly not in the list. Ignoring ");

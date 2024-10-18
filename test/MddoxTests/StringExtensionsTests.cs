@@ -33,5 +33,18 @@ namespace MddoxTests
             var result = text.DedupChar(dchar);
             Assert.Equal(expectedResult, result);
         }
+
+        [Theory]
+        [InlineData("aaa", "aaa")]
+        [InlineData("aaa()", "aaa")]
+        [InlineData("aaa(int t)", "aaa-int-t")]
+        [InlineData("aaa(int[] t)", "aaa-int-t")]
+        [InlineData("aaa(something<> t)", "aaa-something-t")]
+        [InlineData("aaa(something<int> t)", "aaa-something-int-t")]
+        public void CleanupHeadingAnchor(string text, string expectedResult)
+        {
+            var result = text.CleanupHeadingAnchor();
+            Assert.Equal(expectedResult, result);
+        }
     }
 }

@@ -9,7 +9,7 @@ namespace MdDox.MarkdownFormatters
     {
         public override string Name => "github";
 
-        protected override string EscapeSpecialChars(string text)
+        public override string EscapeSpecialChars(string text)
         {
             if (text == null) return "";
             text = text.Replace("<", "\\<");

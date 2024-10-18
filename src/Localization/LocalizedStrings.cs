@@ -1,21 +1,22 @@
-﻿using mddox.Localization.Interfaces;
+﻿using MdDox.Localization.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mddox.Localization
+namespace MdDox.Localization
 {
     public class LocalizedStrings : ILocalizedStrings
     {
         public string CultureName => "en-us";
 
-        public string VersionPrefix => ".v";
+        public string VersionPrefix => "v";
         public string DefaultTitleFormat => "{assembly} {version} API documentation";
         public string AllTypes => "All types";
         public string CreatedBy => "Created by ";
         public string CreatedByOn => " on ";
+        public string CommandLine => "Command line: ";
         public string Values => "Values";
         public string Name => "Name";
         public string Summary => "Summary";

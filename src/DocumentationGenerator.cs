@@ -12,13 +12,13 @@ using static DocXml.Reflection.ReflectionExtensions;
 using MdDox.MarkdownFormatters.Interfaces;
 using MdDox.Reflection;
 using System.Text;
-using mddox.Localization.Interfaces;
-using CommandLine;
+using MdDox.Localization.Interfaces;
 
 namespace MdDox
 {
     public class DocumentationGenerator
     {
+        #region Properties
         /// <summary>
         /// The ordered list of types to document.
         /// </summary>
@@ -40,9 +40,9 @@ namespace MdDox
         /// </summary>
         public string FullText => OutputText.ToString();
 
-        Func<Type, Queue<string>, string> typeLinkConverter;
+        Func<Type, Queue<string>, string> TypeLinkConverter { get; }
         StringBuilder OutputText { get; } = new StringBuilder();
-
+        #endregion
 
         public DocumentationGenerator(
             OrderedTypeList typeList,
@@ -54,7 +54,7 @@ namespace MdDox
             Options = options;
             Markdown = writer;
 
-            typeLinkConverter = (type, _) => TypeNameWithLinks(type, options.AddMsdnLinks, options.MsdnViewParameter);
+            TypeLinkConverter = (type, _) => TypeNameWithLinks(type, options.AddMsdnLinks, options.MsdnViewParameter);
         }
 
         #region Top level document build functions
@@ -78,17 +78,27 @@ namespace MdDox
 
         public void WritedDateLine()
         {
-            if (!Options.ShowDocumentDateTime) return;
-            WriteLine(Options.Strings.CreatedBy + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
-                $"{Options.Strings.CreatedByOn}{DateTime.Now.ToShortDateString()}");
+            if (Options.ShowDocumentDateTime)
+            {
+                WriteLine(Options.Strings.CreatedBy + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
+                    $"{Options.Strings.CreatedByOn}{DateTime.Now.ToShortDateString()}");
+            }
+            if (Options.ShowCommandLine)
+            {
+                // clear command line. Remove the first file name argument
+                var simplifiedCommandLine = Environment.GetCommandLineArgs()
+                    .Select(f => f.StartsWith('-') || !(f.Contains('\\') || f.Contains('/')) ? f : Path.GetFileName(f))
+                    .ToList();
+                WriteLine(Options.Strings.CommandLine + string.Join(" ", simplifiedCommandLine));
+            }
         }
 
         /// <summary>
         /// Write table of contents. It is a multi-column table with each cell containing 
-        /// the link to the heading of the type.
+        /// the link to the heading of the type. For example: "SomeType Class"
         /// </summary>
-        /// <param name="indexTitleText"></param>
-        /// <param name="columnCount"></param>
+        /// <param name="indexTitleText">The title text above the table</param>
+        /// <param name="columnCount">The number of columns in the table</param>
         public void WriteTypeIndex(string indexTitleText, int columnCount)
         {
             if (TypeList.TypesToDocument.Count == 0) return;
@@ -122,11 +132,12 @@ namespace MdDox
 
         /// <summary>
         /// Write markdown documentation for the enum type:
-        /// Examples, Remarks, 
+        /// Summary, Examples, Remarks
         /// </summary>
         /// <param name="typeData"></param>
         public void WriteEnumDocumentation(TypeCollection.TypeInformation typeData)
         {
+            // Example: "MyClass Struct", "Namespace: MyNamespace"
             WriteTypeTitle(typeData.Type);
 
             var enumComments = Reader.GetEnumComments(typeData.Type, true);
@@ -140,7 +151,7 @@ namespace MdDox
                 WriteTableTitle(Options.Strings.Name, Options.Strings.Summary);
                 foreach (var prop in enumComments.ValueComments)
                 {
-                    WriteTableRow(Markdown.Bold(prop.Name), ProcessTags(prop.Summary));
+                    WriteTableRow(Markdown.Bold(prop.Name), Markdown.EscapeSpecialChars(ProcessTags(prop.Summary)));
                 }
             }
         }
@@ -154,11 +165,12 @@ namespace MdDox
         {
             WriteTypeTitle(typeData.Type);
 
+            // Write base class if it is useful
             if (typeData.Type.BaseType != null &&
                 typeData.Type.BaseType != typeof(Object) &&
                 typeData.Type.BaseType != typeof(ValueType))
             {
-                WriteLine(Options.Strings.BaseClass + typeData.Type.BaseType.ToNameString(typeLinkConverter, true));
+                WriteLine(Options.Strings.BaseClass + typeData.Type.BaseType.ToNameString(TypeLinkConverter, true));
             }
 
             var typeComments = Reader.GetTypeComments(typeData.Type);
@@ -169,8 +181,9 @@ namespace MdDox
             var allProperties = Reader.Comments(typeData.Properties).ToList();
             var allConstructors = Reader.Comments(typeData.Methods.Where(it => it is ConstructorInfo)).ToList();
             var allMethods = Reader.Comments(typeData.Methods
-                .Where(it => !(it is ConstructorInfo) && (it is MethodInfo))).ToList();
+                .Where(it => it is not ConstructorInfo && (it is MethodInfo))).ToList();
             var allFields = Reader.Comments(typeData.Fields).ToList();
+
             if (allProperties.Count > 0)
             {
                 WriteTitle(Options.Strings.Properties);
@@ -179,8 +192,8 @@ namespace MdDox
                 {
                     WriteTableRow(
                         Markdown.Bold(Info.Name),
-                        Info.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(Comments.Summary));
+                        Info.ToTypeNameString(TypeLinkConverter, true),
+                        Markdown.EscapeSpecialChars(ProcessTags(Comments.Summary)));
                 }
             }
 
@@ -190,9 +203,11 @@ namespace MdDox
                 WriteTableTitle(Options.Strings.Name, Options.Strings.Summary);
                 foreach (var (Info, Comments) in allConstructors.OrderBy(m => m.Info.GetParameters().Length))
                 {
-                    var heading = typeData.Type.ToNameString() + Info.ToParametersString(typeLinkConverter, true);
-                    heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
-                    WriteTableRow(heading, ProcessTags(Comments.Summary));
+                    var heading = typeData.Type.ToNameString() + Info.ToParametersString(TypeLinkConverter, true);
+                    heading = Options.DocumentMethodDetails ? 
+                        Markdown.HeadingLink(GetMethodTitleNoFormatting(Info, typeData.Type.ToNameString())) : 
+                        Markdown.Bold(heading);
+                    WriteTableRow(heading, Markdown.EscapeSpecialChars(ProcessTags(Comments.Summary)));
                 }
             }
 
@@ -200,19 +215,18 @@ namespace MdDox
             {
                 WriteTitle(Options.Strings.Methods);
                 WriteTableTitle(Options.Strings.Name, Options.Strings.Returns, Options.Strings.Summary);
-                foreach (var (Info, Comments) in allMethods
+                foreach (var (info, comments) in allMethods
                     .OrderBy(m => m.Info.Name)
                     .ThenBy(m => m.Info.GetParameters().Length))
                 {
-                    var methodInfo = Info as MethodInfo;
-
-                    var FuckingName = methodInfo.Name;
-
-                    var heading = methodInfo.Name + methodInfo.ToParametersString(typeLinkConverter, true);
-                    heading = Options.DocumentMethodDetails ? Markdown.HeadingLink(heading, Markdown.Bold(heading)) : Markdown.Bold(heading);
+                    var methodInfo = info as MethodInfo;
+                    var heading = methodInfo.Name + methodInfo.ToParametersString(TypeLinkConverter, true);
+                    heading = Options.DocumentMethodDetails ? 
+                        Markdown.HeadingLink(GetMethodTitleNoFormatting(methodInfo)) : 
+                        Markdown.Bold(heading);
                     WriteTableRow(heading,
-                        methodInfo.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(Comments.Summary));
+                        methodInfo.ToTypeNameString(TypeLinkConverter, true),
+                        Markdown.EscapeSpecialChars(ProcessTags(comments.Summary)));
                 }
             }
 
@@ -224,8 +238,8 @@ namespace MdDox
                 {
                     WriteTableRow(
                         Markdown.Bold(Info.Name),
-                        Info.ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(Comments.Summary));
+                        Info.ToTypeNameString(TypeLinkConverter, true),
+                        Markdown.EscapeSpecialChars(ProcessTags(Comments.Summary)));
                 }
             }
 
@@ -253,9 +267,15 @@ namespace MdDox
             }
         }
 
+        private string GetMethodTitleNoFormatting(MethodBase info, string methodName = null)
+        {
+            return (methodName ?? info.Name) + info.ToParametersString();
+        }
+
         private void WriteMethodDetails(string name, MethodBase info, MethodComments comments)
         {
-            WriteSmallTitle(name + info.ToParametersString());
+            // This title also serves as an anchor for the method
+            WriteSmallTitle(GetMethodTitleNoFormatting(info, name));
             WriteSummary(comments.Summary);
             if (comments.Parameters.Count > 0)
             {
@@ -265,8 +285,8 @@ namespace MdDox
                 foreach (var (paramName, text) in comments.Parameters)
                 {
                     WriteTableRow(paramName,
-                        parameters[i++].ToTypeNameString(typeLinkConverter, true),
-                        ProcessTags(text));
+                        parameters[i++].ToTypeNameString(TypeLinkConverter, true),
+                        Markdown.EscapeSpecialChars(ProcessTags(text)));
                 }
             }
             WriteLine("");
@@ -274,7 +294,7 @@ namespace MdDox
             if (info is MethodInfo methodInfo && methodInfo.ReturnType != typeof(void))
             {
                 WriteSmallTitle(Options.Strings.Returns);
-                WriteLine(methodInfo.ToTypeNameString(typeLinkConverter, true));
+                WriteLine(methodInfo.ToTypeNameString(TypeLinkConverter, true));
                 WriteSummary(comments.Returns);
             }
             WriteExample(comments.Example);
@@ -305,69 +325,85 @@ namespace MdDox
             return null;
         }
 
-        static (string cref, string innerText, string beforeText, string afterText) FindTagWithAttribute(
-            string text, string tag, string attributeName)
-        {
-            if (text.IsNullOrEmpty() || !text.Contains(tag)) return (null, null, text, null);
-            var simpleTag = new Regex("<" + tag + "( +)" + attributeName + "( *)=( *)\"(.*?)\"( *)/>");
-            var match = simpleTag.Match(text);
-            if (match.Success)
-            {
-                return (match.Groups[4].Value, "", text.Substring(0, match.Index),
-                    text.Substring(match.Index + match.Length));
-            }
-
-            var bigTag = new Regex("<" + tag + "( +)"+ attributeName + "( *)=( *)\"(.*?)\"( *)>(.*?)</" + tag + ">");
-            match = bigTag.Match(text);
-            if (match.Success)
-            {
-                return (match.Groups[4].Value, match.Groups[6].Value, text.Substring(0, match.Index),
-                    text.Substring(match.Index + match.Length));
-            }
-            return (null, null, text, null);
-        }
-
+        /// <summary>
+        /// Replace tags with attribute values or inner text with markdown formatting.
+        /// Tags that are processed:
+        /// TAG: seealso    VALUE: cref
+        /// TAG: see        VALUE: cref
+        /// TAG: see        VALUE: href
+        /// TAG: paramref   VALUE: name
+        /// TAG: code       INNER TEXT
+        /// TAG: c          INNER TEXT
+        /// TAG: para       newline
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         string ProcessTags(string text)
         {
             for (; ; )
             {
-                var (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "seealso", "cref");
-                if (cref != null)
+                var (attributeValue, innerText, beforeText, afterText) = text.FindTagWithAttribute("seealso", "cref");
+                if (attributeValue != null)
                 {
-                    text = beforeText + Markdown.Bold(FixCref(cref)) + afterText;
+                    text = beforeText + Markdown.Bold(FixCref(attributeValue)) + afterText;
                     continue;
                 }
-                (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "cref");
-                if (cref != null)
+                (attributeValue, _, beforeText, afterText) = text.FindTagWithAttribute("see", "cref");
+                if (attributeValue != null)
                 {
-                    text = beforeText + Markdown.Bold(FixCref(cref)) + afterText;
+                    text = beforeText + Markdown.Bold(FixCref(attributeValue)) + afterText;
                     continue;
                 }
-                (cref, innerText, beforeText, afterText) = FindTagWithAttribute(text, "see", "href");
-                if (cref != null)
+                (attributeValue, innerText, beforeText, afterText) = text.FindTagWithAttribute("see", "href");
+                if (attributeValue != null)
                 {
-                    text = beforeText + $" {Markdown.Link(cref, innerText )} " + afterText;
+                    text = beforeText + $" {Markdown.Link(attributeValue, innerText )} " + afterText;
+                    continue;
+                }
+                (attributeValue, _, beforeText, afterText) = text.FindShortTagWithAttribute("paramref", "name");
+                if (attributeValue != null)
+                {
+                    text = beforeText + Markdown.Bold(FixCref(attributeValue)) + afterText;
+                    continue;
+                }
+                // Multiline code
+                (_, innerText, beforeText, afterText) = text.FindLongTagWithAttribute("code");
+                if (attributeValue != null)
+                {
+                    text = beforeText + Markdown.StartMultilineCode +
+                        Markdown.EscapeSpecialChars(innerText) +
+                        Markdown.EndMultilineCode +
+                        afterText;
+                    continue;
+                }
+
+                // Inline code
+                (_, innerText, beforeText, afterText) = text.FindLongTagWithAttribute("c");
+                if (attributeValue != null)
+                {
+                    text = beforeText + Markdown.StartInlineCode +
+                        Markdown.EscapeSpecialChars(innerText) +
+                        Markdown.EndInlineCode +
+                        afterText;
                     continue;
                 }
 
                 if (text == null) return text;
+
                 text = text
                     .RegexReplace(@"\s*</para>\s*<para>\s*", Markdown.NewLine)
                     .RegexReplace(@"\s*<para>\s*", Markdown.NewLine)
                     .RegexReplace(@"\s*</para>\s*", Markdown.NewLine)
                     .Trim();
-
-                if (text == null) return text;
-                text = text
-                    .Replace("<c>", Markdown.StartInlineCode)
-                    .Replace("</c>", Markdown.EndInlineCode)
-                    .Replace("<code>", Markdown.StartMultilineCode)
-                    .Replace("</code>", Markdown.EndMultilineCode)
-                    .Trim();
                 return text;
             }
         }
 
+        /// <summary>
+        /// If cref contains a colon then it is a XML doc Id. Extract the Id part after ":".
+        /// </summary>
+        /// <param name="crefText"></param>
+        /// <returns>Part after colon or entire text if colon is missing</returns>
         static string FixCref(string crefText)
         {
             if (!crefText.Contains(':')) return crefText;
@@ -394,6 +430,13 @@ namespace MdDox
             return url;
         }
 
+        /// <summary>
+        /// Return the name of the type with localized version of Class, Struct, Interface, or Enum.
+        /// For example: typeof(string) returns "string Class"
+        /// </summary>
+        /// <param name="type">Type to document</param>
+        /// <param name="localizedStrings"></param>
+        /// <returns>TypeName Type</returns>
         static string TypeTitle(Type type, ILocalizedStrings localizedStrings)
         {
             string complement;
@@ -404,10 +447,16 @@ namespace MdDox
 
             return type.ToNameString() + complement;
         }
-
         #endregion
 
         #region Simple formatted write functions
+        /// <summary>
+        /// Write the title and the namespace:
+        /// Example: 
+        /// #string Class
+        /// Namespace: System
+        /// </summary>
+        /// <param name="type"></param>
         public void WriteTypeTitle(Type type)
         {
             WriteBigTitle(TypeTitle(type, Options.Strings));
@@ -436,30 +485,12 @@ namespace MdDox
         #endregion
 
         #region Low level write functions
-        public void WriteBigTitle(string title)
-        {
-            OutputText.Append(Markdown.Heading(1, title));
-        }
-        public void WriteTitle(string title)
-        {
-            OutputText.Append(Markdown.Heading(2, title));
-        }
-        public void WriteSmallTitle(string title)
-        {
-            OutputText.Append(Markdown.Heading(3, title));
-        }
-        public void WriteTableTitle(params string[] tableHeadings)
-        {
-            OutputText.Append(Markdown.TableTitle(tableHeadings));
-        }
-        public void WriteTableRow(params string[] row)
-        {
-            OutputText.Append(Markdown.TableRow(row));
-        }
-        public void WriteLine(string text)
-        {
-            OutputText.Append(Markdown.WithNewline(text));
-        }
+        public void WriteBigTitle(string title) => OutputText.Append(Markdown.Heading(1, title));
+        public void WriteTitle(string title) => OutputText.Append(Markdown.Heading(2, title));
+        public void WriteSmallTitle(string title) => OutputText.Append(Markdown.Heading(3, title));
+        public void WriteTableTitle(params string[] tableHeadings) => OutputText.Append(Markdown.TableTitle(tableHeadings));
+        public void WriteTableRow(params string[] row) => OutputText.Append(Markdown.TableRow(row));
+        public void WriteLine(string text) => OutputText.Append(Markdown.WithNewline(text));
         #endregion
     }
 }

@@ -9,7 +9,7 @@ namespace MdDox.MarkdownFormatters
     {
         public override string Name => "bitbucket";
 
-        protected override string EscapeSpecialChars(string text)
+        public override string EscapeSpecialChars(string text)
         {
             if (text == null) return "";
             text = text.Replace("&gt;", ">");
@@ -21,7 +21,7 @@ namespace MdDox.MarkdownFormatters
 
         public override string HeadingLink(string anchorName, string text = null)
         {
-            return $"[{text ?? anchorName}](#markdown-header-{anchorName.ToLower().RegexReplace(@"[^a-z\d -]", "").Replace(" ", "-")})";
+            return $"[{text ?? anchorName}](#markdown-header-{anchorName.CleanupHeadingAnchor()})";
         }
 
         public override string Heading(int h, string text)

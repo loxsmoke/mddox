@@ -8,8 +8,8 @@ using MdDox.MarkdownFormatters.Interfaces;
 using MdDox.CommandLineOptions;
 using MdDox.Reflection;
 using System.Globalization;
-using mddox.Localization;
-using mddox.Localization.Interfaces;
+using MdDox.Localization;
+using MdDox.Localization.Interfaces;
 
 namespace MdDox
 {
@@ -54,7 +54,7 @@ namespace MdDox
                     options.Format = MarkdownWriters.First().Name;
                     Console.WriteLine($"Markdown format not specified. Assuming {options.Format}.");
                 }
-                if (!MarkdownWriters.Any(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase)))
+                if (!MarkdownWriters.Any(md => md.Name.EqualsIgnoreCase(options.Format)))
                 {
                     WriteError($"Error: invalid markdown format specified. Valid values: {MarkdownFormatNames}");
                     return (null, null);
@@ -63,7 +63,7 @@ namespace MdDox
                 if (!string.IsNullOrEmpty(options.MsdnLinkViewParameter))
                 {
                     List<string> validPrefixes = ["net-", "netcore-", "netframework-", "netstandard-", "dotnet-uwp-"];
-                    if (!options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase) &&
+                    if (!options.MsdnLinkViewParameter.EqualsIgnoreCase("latest") &&
                         !validPrefixes.Any(prefix => options.MsdnLinkViewParameter.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
                     {
                         WriteError($"Error: invalid MSDN view string. Expected \"latest\" or string starting with one of: {string.Join(" ", validPrefixes)}");
@@ -73,13 +73,13 @@ namespace MdDox
 
                 if (!string.IsNullOrEmpty(options.OutputLanguage))
                 {
-                    if (!LocalizedStrings.Any(ls => ls.CultureName.Equals(options.OutputLanguage, StringComparison.OrdinalIgnoreCase)))
+                    if (!LocalizedStrings.Any(ls => ls.CultureName.EqualsIgnoreCase(options.OutputLanguage)))
                     {
                         WriteError($"Error: invalid language specified. Valid values: {LocalizedStringsCultureNames}");
                         return (null, null);
                     }
                 }
-                else if (!LocalizedStrings.Any(ls => ls.CultureName.Equals(CultureInfo.CurrentCulture.Name, StringComparison.OrdinalIgnoreCase)))
+                else if (!LocalizedStrings.Any(ls => ls.CultureName.EqualsIgnoreCase(CultureInfo.CurrentCulture.Name)))
                 {
                     Console.WriteLine($"Assuming default language. No translations for current culture: {CultureInfo.CurrentCulture.Name}.");
                 }
@@ -138,7 +138,7 @@ namespace MdDox
                     return;
                 }
 
-                var writer = MarkdownWriters.FirstOrDefault(md => md.Name.Equals(options.Format, StringComparison.OrdinalIgnoreCase));
+                var writer = MarkdownWriters.FirstOrDefault(md => md.Name.EqualsIgnoreCase(options.Format));
 
                 if (!File.Exists(options.AssemblyName)) throw new FileNotFoundException("File not found", options.AssemblyName);
 
@@ -185,7 +185,7 @@ namespace MdDox
                     typeFilterOptions, 
                     options.Verbose);
 
-                var localizedStrings = LocalizedStrings.FirstOrDefault(ls => ls.CultureName.Equals(options.OutputLanguage, StringComparison.OrdinalIgnoreCase))
+                var localizedStrings = LocalizedStrings.FirstOrDefault(ls => ls.CultureName.EqualsIgnoreCase(options.OutputLanguage))
                     ?? LocalizedStrings.First();
 
                 var docOptions = new DocumentationGeneratorOptions()
@@ -194,9 +194,10 @@ namespace MdDox
                     DocumentTitle = GenerateTitle(assembly, options.DocumentTitle, localizedStrings),
                     DocumentMethodDetails = options.DocumentMethodDetails,
                     ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
+                    ShowCommandLine = options.ShowCommandLine,
                     AddMsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
                     MsdnViewParameter = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
-                        options.MsdnLinkViewParameter.Equals("latest", StringComparison.OrdinalIgnoreCase)
+                        options.MsdnLinkViewParameter.EqualsIgnoreCase("latest")
                         ? null : options.MsdnLinkViewParameter,
                     MsdnCultureName = localizedStrings.CultureName.ToLower()
                 };

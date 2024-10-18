@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mddox.Localization.Interfaces
+namespace MdDox.Localization.Interfaces
 {
     public interface ILocalizedStrings
     {
@@ -15,6 +15,7 @@ namespace mddox.Localization.Interfaces
         string AllTypes { get; }
         string CreatedBy { get; }
         string CreatedByOn { get; }
+        string CommandLine { get; }
 
         string Values { get; }
         string Name { get; }

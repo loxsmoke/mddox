@@ -1,11 +1,11 @@
-﻿using mddox.Localization.Interfaces;
+﻿using MdDox.Localization.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace mddox.Localization
+namespace MdDox.Localization
 {
     public class LocalizedStringsZhCn : ILocalizedStrings
     {
@@ -16,6 +16,7 @@ namespace mddox.Localization
         public string AllTypes => "所有类型";
         public string CreatedBy => "Created by ";
         public string CreatedByOn => " on ";
+        public string CommandLine => "Command line: ";
         public string Values => "值";
         public string Name => "名称";
         public string Summary => "摘要";

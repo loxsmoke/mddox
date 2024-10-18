@@ -67,11 +67,14 @@ Syntax is the same as for include filters")]
         
         [Option('n', "no-title", Required = false, HelpText = "Do not write the \"created by mddox at date\" in the markdown file.")]
         public bool DoNotShowDocumentDateTime { get; set; }
-        
+
+        [Option('c', "cmd", Required = false, HelpText = "Write command line used to generate the markdown file.")]
+        public bool ShowCommandLine { get; set; }
+
         [Option('v', "verbose", Required = false, HelpText = "Print some debug info when generating documentation.")]
         public bool Verbose { get; set; }
         
-        [Option('l', "language", Required = false, HelpText = "Generate output using specified language. Example: en-us")]
+        [Option('l', "language", Required = false, HelpText = "Generate output using specified language. Available languages: en-us, zh-cn")]
         public string OutputLanguage { get; set; }
     }
 }
