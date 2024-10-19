@@ -35,13 +35,22 @@ namespace MddoxTests
         }
 
         [Theory]
-        [InlineData("aaa", "aaa")]
-        [InlineData("aaa()", "aaa")]
-        [InlineData("aaa(int t)", "aaa-int-t")]
-        [InlineData("aaa(int[] t)", "aaa-int-t")]
-        [InlineData("aaa(something<> t)", "aaa-something-t")]
-        [InlineData("aaa(something<int> t)", "aaa-something-int-t")]
-        public void CleanupHeadingAnchor(string text, string expectedResult)
+        [InlineData("#1", "aaa", "aaa")]
+        [InlineData("#2", "aaa()", "aaa")]
+        [InlineData("#3", "aaa(int t)", "aaaint-t")]
+        [InlineData("#4", "aaa(int[] t)", "aaaint-t")]
+        [InlineData("#5", "aaa(something<> t)", "aaasomething-t")]
+        [InlineData("#6", "aaa(something<int> t)", "aaasomethingint-t")]
+        [InlineData("#7", "CleanGenericTypeName(string genericTypeName)", "cleangenerictypenamestring-generictypename")]
+        [InlineData("#8", "ToNameStringWithValueTupleNames(Type type, IList<string> tupleNames, Func<Type, Queue<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)",
+            "tonamestringwithvaluetuplenamestype-type-iliststring-tuplenames-functype-queuestring-string-typenameconverter-bool-invoketypenameconverterforgenerictype")]
+
+        [InlineData("#9", "IsNullable(Type type)", "isnullabletype-type")]
+        [InlineData("#10", "ToNameString(Type type, Func<Type, string> typeNameConverter)", 
+            "tonamestringtype-type-functype-string-typenameconverter")]
+        [InlineData("#11", "ToNameString(Type type, Func<Type, Queue<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)",
+            "tonamestringtype-type-functype-queuestring-string-typenameconverter-bool-invoketypenameconverterforgenerictype")]
+        public void CleanupHeadingAnchor(string note, string text, string expectedResult)
         {
             var result = text.CleanupHeadingAnchor();
             Assert.Equal(expectedResult, result);
