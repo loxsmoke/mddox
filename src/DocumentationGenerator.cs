@@ -310,6 +310,7 @@ namespace MdDox
                     type.IsGenericTypeDefinition ?  type.Name.CleanGenericTypeName() : type.ToNameString());
             }
             if (msdnLinks &&
+                type.FullName != null && // Open generic types may have null FullName.Just ignore them
                 type != typeof(string) &&
                 (!type.IsValueType || type.IsEnum) &&
                 (type.Assembly.ManifestModule.Name.StartsWith("System.") ||

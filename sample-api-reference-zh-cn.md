@@ -1,6 +1,6 @@
-# DocXml.dll .v3.7.1.0 API 文档
+# DocXml.dll .v3.9.0.0 API 文档
 
-Created by [mddox](https://github.com/loxsmoke/mddox) on 10/18/2024
+Created by [mddox](https://github.com/loxsmoke/mddox) on 12/1/2025
 
 Command line: mddox.dll DocXml.dll -s latest -c -l zh-cn
 
@@ -8,11 +8,11 @@ Command line: mddox.dll DocXml.dll -s latest -c -l zh-cn
 
 |   |   |   |
 |---|---|---|
-| [ReflectionExtensions 类](#reflectionextensions-) | [CommonComments 类](#commoncomments-) | [DocXmlReader 类](#docxmlreader-) |
-| [EnumComments 类](#enumcomments-) | [EnumValueComment 类](#enumvaluecomment-) | [InheritdocTag 类](#inheritdoctag-) |
-| [MethodComments 类](#methodcomments-) | [TypeComments 类](#typecomments-) | [XmlDocId 类](#xmldocid-) |
-| [DocXmlReaderExtensions 类](#docxmlreaderextensions-) | [ReflectionSettings 类](#reflectionsettings-) | [TypeCollection 类](#typecollection-) |
-| [TypeInformation 类](#typeinformation-) |   |   |
+| [ReflectionExtensions 类](#reflectionextensions--) | [CommonComments 类](#commoncomments--) | [DocXmlReader 类](#docxmlreader--) |
+| [EnumComments 类](#enumcomments--) | [EnumValueComment 类](#enumvaluecomment--) | [InheritdocTag 类](#inheritdoctag--) |
+| [MethodComments 类](#methodcomments--) | [SeeAlsoTag 类](#seealsotag--) | [TypeComments 类](#typecomments--) |
+| [XmlDocId 类](#xmldocid--) | [DocXmlReaderExtensions 类](#docxmlreaderextensions--) | [ReflectionSettings 类](#reflectionsettings--) |
+| [TypeCollection 类](#typecollection--) | [TypeInformation 类](#typeinformation--) |   |
 # ReflectionExtensions 类
 
 命名空间：DocXml.Reflection
@@ -23,14 +23,15 @@ Reflection extension methods with supporting properties.
 
 | 名称 | 类型 | 摘要 |
 |---|---|---|
-| **KnownTypeNames** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), string> | A dictionary containing a mapping of type to type names. |
+| **KnownTypeNames** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), string> | A dictionary containing a mapping of primitive types to type names. |
 ## 方法
 
 | 名称 | 返回 | 摘要 |
 |---|---|---|
 | **CleanGenericTypeName(string genericTypeName)** | string | Remove the parameter count part of the generic type name. <br>For example the generic list type name is List`1.<br>This method leaves only the name part of the type such as List.<br>If specified string does not contain the number of parameters <br>part then the same string is returned. |
-| **CreateKnownTypeNamesDictionary()** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), string> | Create a dictionary of standard value types and a string type. |
-| **IsNullable([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | bool | Checks if the specified type is a nullable value type. <br>Returns false for object references. |
+| **CreateKnownTypeNamesDictionary()** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), string> | Create a dictionary of primitive value types and a string type. |
+| **IsNullable([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | bool | Checks if the specified type is a nullable value type. |
+| **IsRecord([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | bool | Check if specified type is a record type. |
 | **ToNameString([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [Func](https://docs.microsoft.com/zh-cn/dotnet/api/system.func-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), string> typeNameConverter)** | string | Convert type to the proper type name.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns ValueTuple types without field names. |
 | **ToNameString([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [Func](https://docs.microsoft.com/zh-cn/dotnet/api/system.func-3)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), [Queue](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.queue-1)<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)** | string | Convert type to the proper type name.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns ValueTuple types without field names. |
 | **ToNameString([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [Queue](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.queue-1)<string> tupleFieldNames, [Func](https://docs.microsoft.com/zh-cn/dotnet/api/system.func-3)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), [Queue](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.queue-1)<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)** | string | Convert type to the proper type name.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns named tuples with field names like this (Type1 field1, Type2 field2).  **tupleFieldNames** parameter<br>must be specified with all tuple field names stored in the same order as they are in compiler-generated TupleElementNames attribute.<br>If you do not know what it is then the better and easier way is to use ToTypeNameString() methods that retrieve field names from attributes. |
@@ -53,8 +54,9 @@ Base class for comments classes
 | **Summary** | string | "summary" comment |
 | **Remarks** | string | "remarks" comment |
 | **Example** | string | "example" comment |
-| **Inheritdoc** | [InheritdocTag](#inheritdoctag-) | Inheritdoc tag. Null if missing in comments. |
+| **Inheritdoc** | [InheritdocTag](#inheritdoctag--) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
+| **SeeAlso** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> | "seealso" links. |
 # DocXmlReader 类
 
 命名空间：LoxSmoke.DocXml
@@ -78,17 +80,18 @@ Helper class that reads XML documentation generated by C# compiler from code com
 
 | 名称 | 返回 | 摘要 |
 |---|---|---|
-| **GetEnumComments([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) enumType, bool fillValues)** | [EnumComments](#enumcomments-) | Get enum type description and comments for enum values. If **fillValues**<br>is false and no comments exist for any value then ValueComments list is empty. |
+| **GetEnumComments([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) enumType, bool fillValues)** | [EnumComments](#enumcomments--) | Get enum type description and comments for enum values. If **fillValues**<br>is false and no comments exist for any value then ValueComments list is empty. |
 | **GetMemberComment([MemberInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.memberinfo) memberInfo)** | string | Returns Summary comment for specified class member. |
-| **GetMemberComments([MemberInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.memberinfo) memberInfo)** | [CommonComments](#commoncomments-) | Returns comments for specified class member. |
-| **GetMethodComments([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) methodInfo)** | [MethodComments](#methodcomments-) | Returns comments for the method or constructor. Returns empty comments object<br>if comments for method are missing in XML documentation file.<br>Returned comments tags:<br>Summary, Remarks, Parameters (if present), Responses (if present), Returns |
-| **GetMethodComments([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) methodInfo, bool nullIfNoComment)** | [MethodComments](#methodcomments-) | Returns comments for the class method. May return null object is comments for method<br>are missing in XML documentation file. <br>Returned comments tags:<br>Summary, Remarks, Parameters (if present), Responses (if present), Returns |
-| **GetTypeComments([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | [TypeComments](#typecomments-) | Return Summary comments for specified type.<br>For Delegate types Parameters field may be returned as well. |
+| **GetMemberComments([MemberInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.memberinfo) memberInfo)** | [CommonComments](#commoncomments--) | Returns comments for specified class member. |
+| **GetMethodComments([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) methodInfo)** | [MethodComments](#methodcomments--) | Returns comments for the method or constructor. Returns empty comments object<br>if comments for method are missing in XML documentation file.<br>Returned comments tags:<br>Summary, Remarks, Parameters (if present), Responses (if present), Returns |
+| **GetMethodComments([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) methodInfo, bool nullIfNoComment)** | [MethodComments](#methodcomments--) | Returns comments for the class method. May return null object is comments for method<br>are missing in XML documentation file. <br>Returned comments tags:<br>Summary, Remarks, Parameters (if present), Responses (if present), Returns |
+| **GetSeeAlsoTags([XPathNavigator](https://docs.microsoft.com/zh-cn/dotnet/api/system.xml.xpath.xpathnavigator) node)** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> |  |
+| **GetTypeComments([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | [TypeComments](#typecomments--) | Return Summary comments for specified type.<br>For Delegate types Parameters field may be returned as well. |
 # EnumComments 类
 
 命名空间：LoxSmoke.DocXml
 
-基类：[CommonComments](#commoncomments-)
+基类：[CommonComments](#commoncomments--)
 
 Enum type comments
 
@@ -96,17 +99,18 @@ Enum type comments
 
 | 名称 | 类型 | 摘要 |
 |---|---|---|
-| **ValueComments** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[EnumValueComment](#enumvaluecomment-)> | "summary" comments of enum values. List contains names, values and <br>comments for each enum value.<br>If none of values have any summary comments then this list may be empty.<br>If at least one value has summary comment then this list contains <br>all enum values with empty comments for values without comments. |
+| **ValueComments** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[EnumValueComment](#enumvaluecomment--)> | "summary" comments of enum values. List contains names, values and <br>comments for each enum value.<br>If none of values have any summary comments then this list may be empty.<br>If at least one value has summary comment then this list contains <br>all enum values with empty comments for values without comments. |
 | **Summary** | string | "summary" comment |
 | **Remarks** | string | "remarks" comment |
 | **Example** | string | "example" comment |
-| **Inheritdoc** | [InheritdocTag](#inheritdoctag-) | Inheritdoc tag. Null if missing in comments. |
+| **Inheritdoc** | [InheritdocTag](#inheritdoctag--) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
+| **SeeAlso** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> | "seealso" links. |
 # EnumValueComment 类
 
 命名空间：LoxSmoke.DocXml
 
-基类：[CommonComments](#commoncomments-)
+基类：[CommonComments](#commoncomments--)
 
 Comment of one enum value
 
@@ -121,8 +125,9 @@ Comment of one enum value
 | **Summary** | string | "summary" comment |
 | **Remarks** | string | "remarks" comment |
 | **Example** | string | "example" comment |
-| **Inheritdoc** | [InheritdocTag](#inheritdoctag-) | Inheritdoc tag. Null if missing in comments. |
+| **Inheritdoc** | [InheritdocTag](#inheritdoctag--) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
+| **SeeAlso** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> | "seealso" links. |
 ## 方法
 
 | 名称 | 返回 | 摘要 |
@@ -143,7 +148,7 @@ Inheritdoc tag with optional cref attribute.
 
 命名空间：LoxSmoke.DocXml
 
-基类：[CommonComments](#commoncomments-)
+基类：[CommonComments](#commoncomments--)
 
 Method, operator and constructor comments
 
@@ -159,13 +164,27 @@ Method, operator and constructor comments
 | **Summary** | string | "summary" comment |
 | **Remarks** | string | "remarks" comment |
 | **Example** | string | "example" comment |
-| **Inheritdoc** | [InheritdocTag](#inheritdoctag-) | Inheritdoc tag. Null if missing in comments. |
+| **Inheritdoc** | [InheritdocTag](#inheritdoctag--) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
+| **SeeAlso** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> | "seealso" links. |
+# SeeAlsoTag 类
+
+命名空间：LoxSmoke.DocXml
+
+Seealso tag with optional cref and href attributes.
+
+## 属性
+
+| 名称 | 类型 | 摘要 |
+|---|---|---|
+| **Cref** | string | Cref attribute value. This value is optional. |
+| **Href** | string | Href attribute value. This value is optional. |
+| **Text** | string | The title, if any, for this link. |
 # TypeComments 类
 
 命名空间：LoxSmoke.DocXml
 
-基类：[CommonComments](#commoncomments-)
+基类：[CommonComments](#commoncomments--)
 
 Class, Struct or  delegate comments
 
@@ -178,8 +197,9 @@ Class, Struct or  delegate comments
 | **Summary** | string | "summary" comment |
 | **Remarks** | string | "remarks" comment |
 | **Example** | string | "example" comment |
-| **Inheritdoc** | [InheritdocTag](#inheritdoctag-) | Inheritdoc tag. Null if missing in comments. |
+| **Inheritdoc** | [InheritdocTag](#inheritdoctag--) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
+| **SeeAlso** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag--)> | "seealso" links. |
 # XmlDocId 类
 
 命名空间：LoxSmoke.DocXml
@@ -219,9 +239,9 @@ using reflection information.
 
 | 名称 | 返回 | 摘要 |
 |---|---|---|
-| **Comments([DocXmlReader](#docxmlreader-) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo)> propInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo) Info, [CommonComments](#commoncomments-) Comments)> | Get comments for the collection of properties. |
-| **Comments([DocXmlReader](#docxmlreader-) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase)> methodInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) Info, [MethodComments](#methodcomments-) Comments)> | Get comments for the collection of methods. |
-| **Comments([DocXmlReader](#docxmlreader-) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo)> fieldInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo) Info, [CommonComments](#commoncomments-) Comments)> | Get comments for the collection of fields. |
+| **Comments([DocXmlReader](#docxmlreader--) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo)> propInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo) Info, [CommonComments](#commoncomments--) Comments)> | Get comments for the collection of properties. |
+| **Comments([DocXmlReader](#docxmlreader--) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase)> methodInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase) Info, [MethodComments](#methodcomments--) Comments)> | Get comments for the collection of methods. |
+| **Comments([DocXmlReader](#docxmlreader--) reader, [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo)> fieldInfos)** | [IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<([FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo) Info, [CommonComments](#commoncomments--) Comments)> | Get comments for the collection of fields. |
 # ReflectionSettings 类
 
 命名空间：LoxSmoke.DocXml.Reflection
@@ -232,7 +252,7 @@ Settings used by TypeCollection to retrieve reflection info.
 
 | 名称 | 类型 | 摘要 |
 |---|---|---|
-| **Default** | [ReflectionSettings](#reflectionsettings-) | Default reflection settings. |
+| **Default** | [ReflectionSettings](#reflectionsettings--) | Returns instance of reflection settings with default values.<br>Includes all public and non-public instance and static properties, fields, methods, and types.<br>Returned object can be modified after retrieval to adjust settings. |
 | **PropertyFlags** | [BindingFlags](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.bindingflags) | Binding flags to use when retrieving properties of the type. |
 | **MethodFlags** | [BindingFlags](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.bindingflags) | Binding flags to use when retrieving methods of the type. |
 | **FieldFlags** | [BindingFlags](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.bindingflags) | Binding flags to use when retrieving fields of the type. |
@@ -252,8 +272,8 @@ Collection of type information objects.
 
 | 名称 | 类型 | 摘要 |
 |---|---|---|
-| **Settings** | [ReflectionSettings](#reflectionsettings-) | Reflection settings that should be used when looking for referenced types. |
-| **ReferencedTypes** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), [TypeInformation](#typeinformation-)> | All referenced types. |
+| **Settings** | [ReflectionSettings](#reflectionsettings--) | Reflection settings that should be used when looking for referenced types. |
+| **ReferencedTypes** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type), [TypeInformation](#typeinformation--)> | All referenced types. |
 | **VisitedPropTypes** | [HashSet](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.hashset-1)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type)> | Types that had their data and functions examined. |
 | **PendingPropTypes** | [Queue](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.queue-1)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type)> | Types that need to have their properties, methods and fields examined. |
 | **CheckAssemblies** | [Dictionary](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.dictionary-2)<[Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly), bool> | Cached information from ExamineAssemblies call.<br>Contains the set of assemblies that should be checked or ignored. |
@@ -262,12 +282,12 @@ Collection of type information objects.
 
 | 名称 | 返回 | 摘要 |
 |---|---|---|
-| **ForReferencedTypes([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [ReflectionSettings](#reflectionsettings-) settings)** | [TypeCollection](#typecollection-) | Get all types referenced by the specified type.<br>Reflection information for the specified type is also returned. |
-| **ForReferencedTypes([Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly) assembly, [ReflectionSettings](#reflectionsettings-) settings)** | [TypeCollection](#typecollection-) | Get all types referenced by the types from specified assembly. |
-| **ForReferencedTypes([IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly)> assemblies, [ReflectionSettings](#reflectionsettings-) settings)** | [TypeCollection](#typecollection-) | Get all types referenced by the types from the list of assemblies. |
-| **GetReferencedTypes([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [ReflectionSettings](#reflectionsettings-) settings)** | void | Get all types referenced by the specified type.<br>Reflection information for the specified type is also returned. |
-| **GetReferencedTypes([Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly) assembly, [ReflectionSettings](#reflectionsettings-) settings)** | void | Get all types referenced by the types from specified assembly. |
-| **GetReferencedTypes([IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly)> assemblies, [ReflectionSettings](#reflectionsettings-) settings)** | void | Get all types referenced by the types from specified assemblies.<br>Reflection information for the specified type is also returned. |
+| **ForReferencedTypes([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [ReflectionSettings](#reflectionsettings--) settings)** | [TypeCollection](#typecollection--) | Get all types referenced by the specified type.<br>Reflection information for the specified type is also returned. |
+| **ForReferencedTypes([Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly) assembly, [ReflectionSettings](#reflectionsettings--) settings)** | [TypeCollection](#typecollection--) | Get all types referenced by the types from specified assembly. |
+| **ForReferencedTypes([IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly)> assemblies, [ReflectionSettings](#reflectionsettings--) settings)** | [TypeCollection](#typecollection--) | Get all types referenced by the types from the list of assemblies. |
+| **GetReferencedTypes([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type, [ReflectionSettings](#reflectionsettings--) settings)** | void | Get all types referenced by the specified type.<br>Reflection information for the specified type is also returned. |
+| **GetReferencedTypes([Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly) assembly, [ReflectionSettings](#reflectionsettings--) settings)** | void | Get all types referenced by the types from specified assembly. |
+| **GetReferencedTypes([IEnumerable](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.ienumerable-1)<[Assembly](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.assembly)> assemblies, [ReflectionSettings](#reflectionsettings--) settings)** | void | Get all types referenced by the types from specified assemblies.<br>Reflection information for the specified type is also returned. |
 | **UnwrapType([Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) parentType, [Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) type)** | void | Recursively "unwrap" the generic type or array. If type is not generic and not an array<br>then do nothing. |
 # TypeInformation 类
 
@@ -282,6 +302,6 @@ Reflection information for the class, its methods, properties and fields.
 | **Type** | [Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type) | The type that this class describes |
 | **ReferencesIn** | [HashSet](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.hashset-1)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type)> | Other types referencing this type. |
 | **ReferencesOut** | [HashSet](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.hashset-1)<[Type](https://docs.microsoft.com/zh-cn/dotnet/api/system.type)> | Other types referenced by this type. |
-| **Properties** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo)> | The list of property inforation of the class. |
-| **Methods** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase)> | The list of method inforation of the class. |
-| **Fields** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo)> | The list of field inforation of the class. |
+| **Properties** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[PropertyInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.propertyinfo)> | The list of property information of the class. |
+| **Methods** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[MethodBase](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.methodbase)> | The list of method information of the class. |
+| **Fields** | [List](https://docs.microsoft.com/zh-cn/dotnet/api/system.collections.generic.list-1)<[FieldInfo](https://docs.microsoft.com/zh-cn/dotnet/api/system.reflection.fieldinfo)> | The list of field information of the class. |

@@ -13,20 +13,6 @@ using MdDox.Localization.Interfaces;
 
 namespace MdDox
 {
-    /// <summary>
-    /// <typeparamref name=""/>
-    /// <paramref name=""/>
-    /// <![CDATA[]]>
-    /// <c></c>
-    /// <code></code>
-    /// <example></example>
-    /// <exception cref=""></exception>
-    /// <list type=""></list>
-    /// <para></para>
-    /// <see cref=""/>
-    /// <seealso cref=""/>
-    /// </summary>
-
     class Program
     {
         static public void WriteError(string error)
