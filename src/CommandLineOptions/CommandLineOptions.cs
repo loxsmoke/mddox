@@ -76,5 +76,8 @@ Syntax is the same as for include filters")]
         
         [Option('l', "language", Required = false, HelpText = "Generate output using specified language. Available languages: en-us, zh-cn")]
         public string OutputLanguage { get; set; }
+
+        [Option("strict-headings", Required = false, HelpText = "Emit a single top-level H1 (the document title) and nest every other heading beneath it.\nWithout this flag, \"All types\" and each type title are also written as H1.")]
+        public bool StrictHeadings { get; set; }
     }
 }

@@ -68,6 +68,7 @@ Short format | Long format | Comment
 | -**n**  | --**no-title**            | Do not write the "created by mddox at date" in the markdown file. |
 | -**v**  | --**verbose**             | Print some debug info when generating documentation. It may help troubleshooting some issues such as missing type information of referenced assemblies. |
 | -**l**  | --**language** "language-code"            | Generate output using specified language. Available languages: en-us, zh-cn  |
+|   | --**strict-headings**       | Emit a single top-level H1 (the document title) and nest every other heading beneath it (H2 for "All types" and each type, H3 for Properties/Methods/etc., H4 for individual member details).<br>Without this flag the legacy layout is preserved (multiple H1 headings). |
   
 For best results enable XML documentation build switch in your project and use publish build to get all referenced assemblies in one folder.
 
