@@ -22,6 +22,7 @@ namespace MddoxTests.CommandLine
         [InlineData("assembly", "--msdn", "latest")]
         [InlineData("assembly", "-i", "{assembly} and {version}")]
         [InlineData("assembly", "--title", "{assembly} and {version}")]
+        [InlineData("assembly", "--strict-headings")]
         public void Parse_Valid(params string[] args)
         {
             var result = MdDox.CommandLineOptions.CliProgram.Parse(args);

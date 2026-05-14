@@ -182,10 +182,11 @@ namespace MdDox
                     ShowDocumentDateTime = !options.DoNotShowDocumentDateTime,
                     ShowCommandLine = options.ShowCommandLine,
                     AddMsdnLinks = !options.MsdnLinkViewParameter.IsNullOrEmpty(),
-                    MsdnViewParameter = options.MsdnLinkViewParameter.IsNullOrEmpty() || 
+                    MsdnViewParameter = options.MsdnLinkViewParameter.IsNullOrEmpty() ||
                         options.MsdnLinkViewParameter.EqualsIgnoreCase("latest")
                         ? null : options.MsdnLinkViewParameter,
-                    MsdnCultureName = localizedStrings.CultureName.ToLower()
+                    MsdnCultureName = localizedStrings.CultureName.ToLower(),
+                    StrictHeadings = options.StrictHeadings
                 };
 
                 var generator = new DocumentationGenerator(

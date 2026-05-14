@@ -38,5 +38,12 @@ namespace MdDox
         /// Localized strings.
         /// </summary>
         public ILocalizedStrings Strings { get; set; }
+        /// <summary>
+        /// When true, only the document title is emitted as H1 and every other heading is shifted down
+        /// one level, producing a strictly nested heading hierarchy (single H1, H2 for type sections,
+        /// H3 for member groups, H4 for member details). When false (default), the legacy layout is
+        /// preserved (multiple H1 headings for "All types" and each type).
+        /// </summary>
+        public bool StrictHeadings { get; set; }
     }
 }

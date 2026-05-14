@@ -73,7 +73,10 @@ namespace MdDox
         public void WriteDocumentTitle(string titleText)
         {
             if (titleText == null) return;
-            WriteBigTitle(titleText);
+            // The document title is always emitted at H1, even in strict-heading mode where
+            // every other heading is shifted down one level. This keeps the document with a
+            // single, unambiguous top-level header.
+            OutputText.Append(Markdown.Heading(1, titleText));
         }
 
         public void WritedDateLine()
@@ -486,9 +489,16 @@ namespace MdDox
         #endregion
 
         #region Low level write functions
-        public void WriteBigTitle(string title) => OutputText.Append(Markdown.Heading(1, title));
-        public void WriteTitle(string title) => OutputText.Append(Markdown.Heading(2, title));
-        public void WriteSmallTitle(string title) => OutputText.Append(Markdown.Heading(3, title));
+        /// <summary>
+        /// Heading level offset applied to all non-document-title headings when
+        /// <see cref="DocumentationGeneratorOptions.StrictHeadings"/> is enabled. This shifts
+        /// "All types" and per-type titles to H2, member-group sections (Properties, Methods, ...)
+        /// to H3, and method-detail signatures to H4, leaving the document title as the sole H1.
+        /// </summary>
+        private int HeadingOffset => Options.StrictHeadings ? 1 : 0;
+        public void WriteBigTitle(string title) => OutputText.Append(Markdown.Heading(1 + HeadingOffset, title));
+        public void WriteTitle(string title) => OutputText.Append(Markdown.Heading(2 + HeadingOffset, title));
+        public void WriteSmallTitle(string title) => OutputText.Append(Markdown.Heading(3 + HeadingOffset, title));
         public void WriteTableTitle(params string[] tableHeadings) => OutputText.Append(Markdown.TableTitle(tableHeadings));
         public void WriteTableRow(params string[] row) => OutputText.Append(Markdown.TableRow(row));
         public void WriteLine(string text) => OutputText.Append(Markdown.WithNewline(text));
