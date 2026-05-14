@@ -83,13 +83,13 @@ namespace MddoxTests.MarkdownFormatters
         }
 
         [TestMethod]
-        public void EscapeSpecialChars_DoesNotReplaceSimpleNewlineChar()
+        public void EscapeSpecialChars_ReplacesNewlineCharWithBr()
         {
             var input = "Line1\nLine2";
             var result = _formatter.EscapeSpecialChars(input);
 
-            // Azure formatter only replaces Environment.NewLine, not \n
-            Assert.AreEqual("Line1\nLine2", result);
+            // Azure formatter replaces all newlines with <br>, like other formatters
+            Assert.AreEqual("Line1<br>Line2", result);
         }
 
         [TestMethod]

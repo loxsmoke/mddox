@@ -211,10 +211,14 @@ namespace MddoxTests
 
             var expectedFilePath = Path.Combine("TestData", "ExpectedTestClassDocumentation.md");
             Assert.IsTrue(File.Exists(expectedFilePath), $"Expected file not found: {expectedFilePath}");
-            
+
             var expectedOutput = File.ReadAllText(expectedFilePath);
 
-            Assert.AreEqual(expectedOutput, actualOutput, 
+            // Normalize line endings to make test OS-agnostic
+            var normalizedExpected = expectedOutput.Replace("\r\n", "\n").Replace("\r", "\n");
+            var normalizedActual = actualOutput.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            Assert.AreEqual(normalizedExpected, normalizedActual, 
                 "Generated documentation does not match expected output. " +
                 "If the change is intentional, update ExpectedTestClassDocumentation.md");
         }
