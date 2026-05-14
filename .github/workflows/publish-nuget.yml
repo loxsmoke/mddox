@@ -11,12 +11,15 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.x'
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
 
       - name: Build the project
         run: dotnet build mddox.csproj -c Release

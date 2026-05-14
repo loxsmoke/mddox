@@ -19,7 +19,9 @@ namespace MdDox.MarkdownFormatters
             text = text.Replace("&gt;", ">");
             text = text.Replace("&lt;", "<");
             text = text.Replace("|", "\\|");
-            return text.Replace(Environment.NewLine, "<br>");
+            // Replace \r\n first (Windows), then \r alone (old Mac), but leave \n alone
+            text = text.Replace("\r\n", "<br>");
+            return text.Replace("\r", "<br>");
         }
 
         /// <inheritdoc/>
