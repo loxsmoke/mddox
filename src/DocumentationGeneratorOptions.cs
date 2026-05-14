@@ -1,14 +1,16 @@
-﻿using MdDox.Localization;
-using MdDox.Localization.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MdDox.Localization.Interfaces;
 
 namespace MdDox
 {
+    /// <summary>
+    /// Options for configuring documentation generation.
+    /// </summary>
     public class DocumentationGeneratorOptions
     {
-        public bool DocumentMethodDetails { get; set; }
+        /// <summary>
+        /// Document title that is formatted according to the format specified via the command line. 
+        /// If missing, uses the default format for the current language.
+        /// </summary>
         public string DocumentTitle { get; set; }
         /// <summary>
         /// Show "created by mddox at date" in the document.
@@ -35,7 +37,11 @@ namespace MdDox
         /// </summary>
         public int TypeIndexColumnCount { get; set; } = 3;
         /// <summary>
-        /// Localized strings.
+        /// True if method details should be documented for all classes.
+        /// </summary>
+        public bool DocumentMethodDetails { get; set; }
+        /// <summary>
+        /// Localized strings for the documentation.
         /// </summary>
         public ILocalizedStrings Strings { get; set; }
         /// <summary>

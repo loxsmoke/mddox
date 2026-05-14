@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
+﻿using System.Text.RegularExpressions;
 
 namespace MdDox
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public static class StringExtensions
     {
         public static string RegexReplace(this string input, string pattern, string replacement)
@@ -19,6 +17,12 @@ namespace MdDox
             return existingText + separator + addText;
         }
 
+        /// <summary>
+        /// Compares this string to another string using case-insensitive comparison.
+        /// </summary>
+        /// <param name="text">The string to compare</param>
+        /// <param name="other">The string to compare against</param>
+        /// <returns>True if the strings are equal ignoring case; otherwise, false</returns>
         public static bool EqualsIgnoreCase(this string text, string other) => 
             text.Equals(other, System.StringComparison.OrdinalIgnoreCase);
 
@@ -113,5 +117,15 @@ namespace MdDox
             return (null, null, text, null);
         }
 
+        /// <summary>
+        /// Wraps the text in double quotes. Returns empty quotes if text is null or empty.
+        /// </summary>
+        /// <param name="text">The text to quote</param>
+        /// <returns>The text wrapped in double quotes</returns>
+        public static string Quoted(this string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "\"\"";
+            return $"\"{text}\"";
+        }
     }
 }

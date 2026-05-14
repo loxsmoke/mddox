@@ -1,12 +1,8 @@
 ﻿using MdDox.Localization.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MdDox.Localization
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class LocalizedStringsZhCn : ILocalizedStrings
     {
         public string CultureName => "zh-cn";
@@ -29,10 +25,11 @@ namespace MdDox.Localization
         public string Fields => "字段";
         public string Parameter => "参数";
         public string Description => "描述";
-        public string Enum => " 枚举";
-        public string Interface => " 接口";
-        public string Struct => " 结构体";
-        public string Class => " 类";
+        public string Enum => "枚举";
+        public string Interface => "接口";
+        public string Struct => "结构体";
+        public string Class => "类";
+        public string Record => "记录";
         public string Namespace => "命名空间：";
         public string Examples => "示例";
         public string Remarks => "备注";

@@ -1,16 +1,16 @@
-﻿using MdDox;
-using MdDox.MarkdownFormatters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 
 namespace MdDox.MarkdownFormatters
 {
+    /// <summary>
+    /// Markdown formatter for Azure.
+    /// </summary>
     public class AzureMarkdownFormatter : MarkdownFormatter 
     {
+        /// <inheritdoc/>
         public override string Name => "azure";
 
+        /// <inheritdoc/>
         public override string EscapeSpecialChars(string text)
         {
             if (text == null) return "";
@@ -22,6 +22,7 @@ namespace MdDox.MarkdownFormatters
             return text.Replace(Environment.NewLine, "<br>");
         }
 
+        /// <inheritdoc/>
         public override string HeadingLink(string anchorName, string text = null)
         {
             anchorName = anchorName.ToLower()

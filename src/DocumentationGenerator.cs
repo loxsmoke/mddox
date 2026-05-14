@@ -1,21 +1,27 @@
-﻿using System;
+﻿using DocXml.Reflection;
+using LoxSmoke.DocXml;
+using LoxSmoke.DocXml.Reflection;
+using MdDox.Localization.Interfaces;
+using MdDox.MarkdownFormatters.Interfaces;
+using MdDox.Reflection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using DocXml.Reflection;
-using LoxSmoke.DocXml;
-using LoxSmoke.DocXml.Reflection;
-using static LoxSmoke.DocXml.Reflection.DocXmlReaderExtensions;
-using static DocXml.Reflection.ReflectionExtensions;
-using MdDox.MarkdownFormatters.Interfaces;
-using MdDox.Reflection;
 using System.Text;
-using MdDox.Localization.Interfaces;
+using static DocXml.Reflection.ReflectionExtensions;
+using static LoxSmoke.DocXml.Reflection.DocXmlReaderExtensions;
 
 namespace MdDox
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+    /// <summary>
+    /// Generates markdown documentation from .NET assemblies with XML documentation comments.
+    /// Converts compiler-generated XML documentation into formatted markdown suitable for GitHub, BitBucket, or Azure DevOps.
+    /// Supports generating type indexes, detailed member documentation, MSDN links, and multiple output languages.
+    /// </summary>
     public class DocumentationGenerator
     {
         #region Properties
@@ -36,14 +42,30 @@ namespace MdDox
         /// </summary>
         public IMarkdownFormatter Markdown { get; }
         /// <summary>
-        /// Generated markdown text. Call BuildDocument() before retrieving the text.
+        /// Generated markdown text. Automatically calls BuildDocument() if the output is empty.
         /// </summary>
-        public string FullText => OutputText.ToString();
+        public string FullText
+        {
+            get
+            {
+                if (OutputText.Length == 0)
+                {
+                    BuildDocument();
+                }
+                return OutputText.ToString();
+            }
+        }
 
         Func<Type, Queue<string>, string> TypeLinkConverter { get; }
         StringBuilder OutputText { get; } = new StringBuilder();
         #endregion
 
+        /// <summary>
+        /// Initializes a new instance of the DocumentationGenerator class.
+        /// </summary>
+        /// <param name="typeList">The ordered list of types to include in the documentation.</param>
+        /// <param name="options">Configuration options for documentation generation including format, filters, and output settings.</param>
+        /// <param name="writer">The markdown formatter to use for generating repository-specific markdown output.</param>
         public DocumentationGenerator(
             OrderedTypeList typeList,
             DocumentationGeneratorOptions options,
@@ -58,10 +80,17 @@ namespace MdDox
         }
 
         #region Top level document build functions
+        /// <summary>
+        /// Generate document using specified options and type list.
+        /// This method does not write to a file directly, but prepares the markdown text in the OutputText StringBuilder.
+        /// </summary>
         public void BuildDocument()
         {
             OutputText.Clear();
-            WriteDocumentTitle(Options.DocumentTitle);
+            if (Options.DocumentTitle != null)
+            {
+                WriteDocumentTitle(Options.DocumentTitle);
+            }
             WritedDateLine();
             WriteTypeIndex(Options.Strings.AllTypes, Options.TypeIndexColumnCount);
             foreach (var typeData in TypeList.TypesToDocument)
@@ -70,29 +99,25 @@ namespace MdDox
             }
         }
 
-        public void WriteDocumentTitle(string titleText)
-        {
-            if (titleText == null) return;
-            // The document title is always emitted at H1, even in strict-heading mode where
-            // every other heading is shifted down one level. This keeps the document with a
-            // single, unambiguous top-level header.
-            OutputText.Append(Markdown.Heading(1, titleText));
-        }
-
+        /// <summary>
+        /// Includes a link to the mddox GitHub repository and the current date when ShowDocumentDateTime is enabled.
+        /// Includes the command line arguments when ShowCommandLine is enabled.
+        /// </summary>
         public void WritedDateLine()
         {
             if (Options.ShowDocumentDateTime)
             {
                 WriteLine(Options.Strings.CreatedBy + Markdown.Link("https://github.com/loxsmoke/mddox", "mddox") +
-                    $"{Options.Strings.CreatedByOn}{DateTime.Now.ToShortDateString()}");
+                    $"{Options.Strings.CreatedByOn}{DateTime.Now:d}");
             }
             if (Options.ShowCommandLine)
             {
-                // clear command line. Remove the first file name argument
+                // clear command line. Remove the first argument (the executable) and simplify file paths
                 var simplifiedCommandLine = Environment.GetCommandLineArgs()
+                    .Skip(1)
                     .Select(f => f.StartsWith('-') || !(f.Contains('\\') || f.Contains('/')) ? f : Path.GetFileName(f))
                     .ToList();
-                WriteLine(Options.Strings.CommandLine + string.Join(" ", simplifiedCommandLine));
+                    WriteLine(Options.Strings.CommandLine + string.Join(" ", simplifiedCommandLine));
             }
         }
 
@@ -121,6 +146,11 @@ namespace MdDox
             }
         }
 
+        /// <summary>
+        /// Writes the markdown documentation for a type.
+        /// Calls WriteEnumDocumentation for enum types or WriteClassDocumentation for all other types.
+        /// </summary>
+        /// <param name="typeData">The type to document.</param>
         public void WriteTypeDocumentation(TypeCollection.TypeInformation typeData)
         {
             if (typeData.Type.IsEnum)
@@ -135,9 +165,9 @@ namespace MdDox
 
         /// <summary>
         /// Write markdown documentation for the enum type:
-        /// Summary, Examples, Remarks
+        /// Summary, Examples, Remarks, and Values.
         /// </summary>
-        /// <param name="typeData"></param>
+        /// <param name="typeData">The enum type to document.</param>
         public void WriteEnumDocumentation(TypeCollection.TypeInformation typeData)
         {
             // Example: "MyClass Struct", "Namespace: MyNamespace"
@@ -270,6 +300,12 @@ namespace MdDox
             }
         }
 
+        /// <summary>
+        /// Gets the method title without markdown formatting for use as anchor links.
+        /// </summary>
+        /// <param name="info">The method or constructor information.</param>
+        /// <param name="methodName">Optional method name override. If null, uses info.Name.</param>
+        /// <returns>A string combining the method name and parameters.</returns>
         private string GetMethodTitleNoFormatting(MethodBase info, string methodName = null)
         {
             return (methodName ?? info.Name) + info.ToParametersString();
@@ -305,6 +341,15 @@ namespace MdDox
         #endregion
 
         #region Formatting, tags, links
+        /// <summary>
+        /// Generates a markdown-formatted type name with appropriate links.
+        /// Creates internal document links for types being documented, 
+        /// MSDN links for System/Microsoft types when enabled, or plain text for other types.
+        /// </summary>
+        /// <param name="type">The type to generate a name and link for.</param>
+        /// <param name="msdnLinks">If true, generate MSDN documentation links for System.* and Microsoft.* types.</param>
+        /// <param name="msdnView">The MSDN documentation view parameter (e.g., "latest", "net-8.0").</param>
+        /// <returns>A markdown-formatted string with the type name and appropriate link, or null if no special formatting is needed.</returns>
         public string TypeNameWithLinks(Type type, bool msdnLinks, string msdnView)
         {
             if (TypeList.TypesToDocumentSet.Contains(type))
@@ -406,8 +451,13 @@ namespace MdDox
         /// <summary>
         /// If cref contains a colon then it is a XML doc Id. Extract the Id part after ":".
         /// </summary>
-        /// <param name="crefText"></param>
+        /// <param name="crefText">The cref text to process.</param>
         /// <returns>Part after colon or entire text if colon is missing</returns>
+        /// <example>
+        /// FixCref("T:System.String") returns "System.String"
+        /// FixCref("M:System.Console.WriteLine") returns "System.Console.WriteLine"
+        /// FixCref("MyClass") returns "MyClass"
+        /// </example>
         static string FixCref(string crefText)
         {
             if (!crefText.Contains(':')) return crefText;
@@ -425,7 +475,7 @@ namespace MdDox
         /// <param name="locale">The locale of the documentation.
         /// For example en-us</param>
         /// <returns>URL to the type documentation page</returns>
-        static string MsdnUrlForType(Type type, string view, string locale)
+        public static string MsdnUrlForType(Type type, string view, string locale)
         {
             var urlParameters = view.IsNullOrEmpty() ? "" : $"?view={view}";
             var typeNameFragment = type.FullName.ToLowerInvariant();
@@ -441,15 +491,16 @@ namespace MdDox
         /// <param name="type">Type to document</param>
         /// <param name="localizedStrings"></param>
         /// <returns>TypeName Type</returns>
-        static string TypeTitle(Type type, ILocalizedStrings localizedStrings)
+        public static string TypeTitle(Type type, ILocalizedStrings localizedStrings)
         {
             string complement;
             if (type.IsEnum) complement = localizedStrings.Enum;
             else if (type.IsInterface) complement = localizedStrings.Interface;
+            else if (type.IsRecord()) complement = localizedStrings.Record;
             else if (type.IsValueType) complement = localizedStrings.Struct;
             else complement = localizedStrings.Class;
 
-            return type.ToNameString() + complement;
+            return type.ToNameString() + " " + complement;
         }
         #endregion
 
@@ -489,16 +540,10 @@ namespace MdDox
         #endregion
 
         #region Low level write functions
-        /// <summary>
-        /// Heading level offset applied to all non-document-title headings when
-        /// <see cref="DocumentationGeneratorOptions.StrictHeadings"/> is enabled. This shifts
-        /// "All types" and per-type titles to H2, member-group sections (Properties, Methods, ...)
-        /// to H3, and method-detail signatures to H4, leaving the document title as the sole H1.
-        /// </summary>
-        private int HeadingOffset => Options.StrictHeadings ? 1 : 0;
-        public void WriteBigTitle(string title) => OutputText.Append(Markdown.Heading(1 + HeadingOffset, title));
-        public void WriteTitle(string title) => OutputText.Append(Markdown.Heading(2 + HeadingOffset, title));
-        public void WriteSmallTitle(string title) => OutputText.Append(Markdown.Heading(3 + HeadingOffset, title));
+        public void WriteDocumentTitle(string title) => OutputText.Append(Markdown.Heading(1, title));
+        public void WriteBigTitle(string title) => OutputText.Append(Markdown.Heading(2, title));
+        public void WriteTitle(string title) => OutputText.Append(Markdown.Heading(3, title));
+        public void WriteSmallTitle(string title) => OutputText.Append(Markdown.Heading(4, title));
         public void WriteTableTitle(params string[] tableHeadings) => OutputText.Append(Markdown.TableTitle(tableHeadings));
         public void WriteTableRow(params string[] row) => OutputText.Append(Markdown.TableRow(row));
         public void WriteLine(string text) => OutputText.Append(Markdown.WithNewline(text));

@@ -1,6 +1,7 @@
 using CommandLine;
-using System;
 using System.Collections.Generic;
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace MdDox.CommandLineOptions
 {
@@ -39,7 +40,12 @@ Example: field.attribute.JsonIgnoreAttribute
 Filter by name: subject.name.wildcard
 Subject is one of: [all, type, method, field, property]
 wildcard is a simple wildcard matching the name.
-Example: type.name.Hidden*")]
+Example: type.name.Hidden*
+
+Include inherited fields, methods, or properties
+Subject is one of: [all, method, field, property]
+Default: property.inherited (inherited properties are included by default, methods and fields are not)
+Example: method.inherited")]
         public IEnumerable<string> IncludeFilters { get; set; }
 
         [Option("exclude", Required = false, HelpText =

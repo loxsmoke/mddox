@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MdDox.Reflection
+﻿namespace MdDox.Reflection
 {
+    /// <summary>
+    /// Defines the scope of the filter, such as visibility, presence of attribute, specific name, or inherited.
+    /// </summary>
     public enum FilterScope
     {
         /// <summary>
@@ -29,6 +28,10 @@ namespace MdDox.Reflection
         /// <summary>
         /// Filter applies only to items that have specified name wildcard
         /// </summary>
-        Name
+        Name,
+        /// <summary>
+        /// Filter applies to inherited fields, methods, or properties.
+        /// </summary>
+        Inherited
     }
 }

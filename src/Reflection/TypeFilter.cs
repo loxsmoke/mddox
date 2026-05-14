@@ -2,16 +2,49 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace MdDox.Reflection
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class TypeFilter
     {
         public TypeFilterOptions Options { get; }
+        /// <summary>
+        /// Binding flags to use when retrieving properties of the type.
+        /// </summary>
+        public BindingFlags PropertyFlags { get; }
+        /// <summary>
+        /// Binding flags to use when retrieving methods of the type.
+        /// </summary>
+        public BindingFlags MethodFlags { get; }
+        /// <summary>
+        /// Binding flags to use when retrieving fields of the type.
+        /// </summary>
+        public BindingFlags FieldFlags { get; }
+
         public TypeFilter(TypeFilterOptions options)
         {
             Options = options;
+
+            // Determine if inherited properties, methods, and fields should be included
+            PropertyFlags = 
+                BindingFlags.Instance |
+                BindingFlags.Public |
+                BindingFlags.NonPublic |
+                BindingFlags.Static |
+                (options.IncludeInherited(FilterType.Property) ? 0 : BindingFlags.DeclaredOnly);
+            
+            MethodFlags =
+                BindingFlags.Instance |
+                BindingFlags.Public |
+                BindingFlags.Static |
+                (options.IncludeInherited(FilterType.Method) ? 0 : BindingFlags.DeclaredOnly);
+
+            FieldFlags =
+                BindingFlags.Instance |
+                BindingFlags.Public |
+                BindingFlags.Static |
+                (options.IncludeInherited(FilterType.Field) ? 0 : BindingFlags.DeclaredOnly);
         }
 
         public (bool match, FilterItem include, FilterItem exclude) MatchFilters(

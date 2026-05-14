@@ -1,10 +1,10 @@
-# DocXml.dll v3.9.0.0 API documentation
+# DocXml v3.9.0.0 API documentation
 
-Created by [mddox](https://github.com/loxsmoke/mddox) on 12/1/2025
+Created by [mddox](https://github.com/loxsmoke/mddox) on 5/14/2026
 
-Command line: mddox.dll DocXml.dll -s latest -c -d
+Command line: DocXml.dll -s latest -c -d -o sample-api-reference.md
 
-# All types
+## All types
 
 |   |   |   |
 |---|---|---|
@@ -13,18 +13,18 @@ Command line: mddox.dll DocXml.dll -s latest -c -d
 | [MethodComments Class](#methodcomments-class) | [SeeAlsoTag Class](#seealsotag-class) | [TypeComments Class](#typecomments-class) |
 | [XmlDocId Class](#xmldocid-class) | [DocXmlReaderExtensions Class](#docxmlreaderextensions-class) | [ReflectionSettings Class](#reflectionsettings-class) |
 | [TypeCollection Class](#typecollection-class) | [TypeInformation Class](#typeinformation-class) |   |
-# ReflectionExtensions Class
+## ReflectionExtensions Class
 
 Namespace: DocXml.Reflection
 
 Reflection extension methods with supporting properties.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
 | **KnownTypeNames** | [Dictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/en-us/dotnet/api/system.type), string> | A dictionary containing a mapping of primitive types to type names. |
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
@@ -41,9 +41,9 @@ Reflection extension methods with supporting properties.
 | [ToTypeNameString(MethodInfo methodInfo, Func<Type, Queue<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)](#totypenamestringmethodinfo-methodinfo-functype-queuestring-string-typenameconverter-bool-invoketypenameconverterforgenerictype) | string | Convert method return value type to the string.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns ValueTuple types with field names like this (Type1 name1, Type2 name2). |
 | [ToTypeNameString(PropertyInfo propertyInfo, Func<Type, Queue<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)](#totypenamestringpropertyinfo-propertyinfo-functype-queuestring-string-typenameconverter-bool-invoketypenameconverterforgenerictype) | string | Convert property type to the string.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns ValueTuple types with field names like this (Type1 name1, Type2 name2). |
 | [ToTypeNameString(FieldInfo fieldInfo, Func<Type, Queue<string>, string> typeNameConverter, bool invokeTypeNameConverterForGenericType)](#totypenamestringfieldinfo-fieldinfo-functype-queuestring-string-typenameconverter-bool-invoketypenameconverterforgenerictype) | string | Convert field type to the string.<br>Optional **typeNameConverter** function can convert type names to strings <br>if type names should be decorated in some way either by converting text to markdown or <br>HTML links or adding some formatting.<br><br>This method returns ValueTuple types with field names like this (Type1 name1, Type2 name2). |
-## Methods
+### Methods
 
-### CleanGenericTypeName(string genericTypeName)
+#### CleanGenericTypeName(string genericTypeName)
 
 Remove the parameter count part of the generic type name. 
 For example the generic list type name is List`1.
@@ -56,25 +56,25 @@ part then the same string is returned.
 | genericTypeName | string | Type name |
 
 
-### Returns
+#### Returns
 
 string
 
 Type name without the number of parameters.
 
-### CreateKnownTypeNamesDictionary()
+#### CreateKnownTypeNamesDictionary()
 
 Create a dictionary of primitive value types and a string type.
 
 
 
-### Returns
+#### Returns
 
 [Dictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2)<[Type](https://docs.microsoft.com/en-us/dotnet/api/system.type), string>
 
 Dictionary mapping types to type names
 
-### IsNullable(Type type)
+#### IsNullable(Type type)
 
 Checks if the specified type is a nullable value type.
 
@@ -83,13 +83,13 @@ Checks if the specified type is a nullable value type.
 | type | [Type](https://docs.microsoft.com/en-us/dotnet/api/system.type) | Type to check. |
 
 
-### Returns
+#### Returns
 
 bool
 
 Returns true if the type is nullable like int? or Nullable&lt;T&gt;. False for non-nullable types or object references.
 
-### IsRecord(Type type)
+#### IsRecord(Type type)
 
 Check if specified type is a record type.
 
@@ -98,13 +98,13 @@ Check if specified type is a record type.
 | type | [Type](https://docs.microsoft.com/en-us/dotnet/api/system.type) |  |
 
 
-### Returns
+#### Returns
 
 bool
 
 Return true if it is a record. False otherwise.
 
-### ToNameString(Type type, Func\<Type, string\> typeNameConverter)
+#### ToNameString(Type type, Func\<Type, string\> typeNameConverter)
 
 Convert type to the proper type name.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -119,13 +119,13 @@ This method returns ValueTuple types without field names.
 | typeNameConverter | [Func](https://docs.microsoft.com/en-us/dotnet/api/system.func-2)<[Type](https://docs.microsoft.com/en-us/dotnet/api/system.type), string> | The optional function that converts type name to string. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name
 
-### ToNameString(Type type, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToNameString(Type type, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert type to the proper type name.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -141,13 +141,13 @@ This method returns ValueTuple types without field names.
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name
 
-### ToNameString(Type type, Queue\<string\> tupleFieldNames, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToNameString(Type type, Queue\<string\> tupleFieldNames, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert type to the proper type name.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -166,13 +166,13 @@ If you do not know what it is then the better and easier way is to use ToTypeNam
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name
 
-### ToNameStringWithValueTupleNames(Type type, IList\<string\> tupleNames, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToNameStringWithValueTupleNames(Type type, IList\<string\> tupleNames, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert type to the string.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -189,13 +189,13 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full name of the specified type
 
-### ToParametersString(MethodBase methodInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToParametersString(MethodBase methodInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert method parameters to the string. If method has no parameters then returned string is ()
 If parameters are present then returned string contains parameter names with their type names.
@@ -212,13 +212,13 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full list of parameter types and their names
 
-### ToTypeNameString(ParameterInfo parameterInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToTypeNameString(ParameterInfo parameterInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert method parameter type to the string.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -234,13 +234,13 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name of the parameter
 
-### ToTypeNameString(MethodInfo methodInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToTypeNameString(MethodInfo methodInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert method return value type to the string.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -256,13 +256,13 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name of the return value
 
-### ToTypeNameString(PropertyInfo propertyInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToTypeNameString(PropertyInfo propertyInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert property type to the string.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -278,13 +278,13 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name of the property
 
-### ToTypeNameString(FieldInfo fieldInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
+#### ToTypeNameString(FieldInfo fieldInfo, Func\<Type, Queue\<string\>, string\> typeNameConverter, bool invokeTypeNameConverterForGenericType)
 
 Convert field type to the string.
 Optional **typeNameConverter** function can convert type names to strings 
@@ -300,19 +300,19 @@ This method returns ValueTuple types with field names like this (Type1 name1, Ty
 | invokeTypeNameConverterForGenericType | bool | True if typeNameConverter lambda function should be invoked for generic type name such as for the List name in case of List<SomeType><br>            If the parameter value is false then typeNameConverter is not invoked for the generic type name and only the plain type name is returned.<br>            If the parameter value is true then typeNameConverter must handle generic type definitions carefully and avoid calling <br>            ToNameString() to avoid infinite recursion. |
 
 
-### Returns
+#### Returns
 
 string
 
 Full type name of the field
 
-# CommonComments Class
+## CommonComments Class
 
 Namespace: LoxSmoke.DocXml
 
 Base class for comments classes
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -322,18 +322,18 @@ Base class for comments classes
 | **Inheritdoc** | [InheritdocTag](#inheritdoctag-class) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
 | **SeeAlso** | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> | "seealso" links. |
-# DocXmlReader Class
+## DocXmlReader Class
 
 Namespace: LoxSmoke.DocXml
 
 Helper class that reads XML documentation generated by C# compiler from code comments.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
 | **UnIndentText** | bool | Default value is true.<br>When it is set to true DocXmlReader removes leading spaces and an empty<br>lines at the end of the comment.<br>By default XML comments are indented for human readability but it adds<br>leading spaces that are not present in source code.<br>For example here is compiler generated XML documentation with '-' <br>showing spaces for readability. <br>----\<summary\><br>----Text<br>----\</summary\><br>With UnIndentText set to true returned summary text is just "Text"<br>With UnIndentText set to false returned summary text contains leading spaces<br>and the trailing empty line "\n----Text\n----" |
-## Constructors
+### Constructors
 
 | Name | Summary |
 |---|---|
@@ -341,7 +341,7 @@ Helper class that reads XML documentation generated by C# compiler from code com
 | [DocXmlReader(XPathDocument xPathDocument, bool unindentText)](#docxmlreaderxpathdocument-xpathdocument-bool-unindenttext) | Create reader for specified xpath document. |
 | [DocXmlReader(Func<Assembly, string> assemblyXmlPathFunction, bool unindentText)](#docxmlreaderfuncassembly-string-assemblyxmlpathfunction-bool-unindenttext) | Open XML documentation files based on assemblies of types. Comment file names <br>are generated based on assembly names by replacing assembly location with .xml. |
 | [DocXmlReader(IEnumerable<Assembly> assemblies, Func<Assembly, string> assemblyXmlPathFunction, bool unindentText)](#docxmlreaderienumerableassembly-assemblies-funcassembly-string-assemblyxmlpathfunction-bool-unindenttext) | Open XML documentation files based on assemblies of types. Comment file names <br>are generated based on assembly names by replacing assembly location with .xml. |
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
@@ -352,9 +352,9 @@ Helper class that reads XML documentation generated by C# compiler from code com
 | [GetMethodComments(MethodBase methodInfo, bool nullIfNoComment)](#getmethodcommentsmethodbase-methodinfo-bool-nullifnocomment) | [MethodComments](#methodcomments-class) | Returns comments for the class method. May return null object is comments for method<br>are missing in XML documentation file. <br>Returned comments tags:<br>Summary, Remarks, Parameters (if present), Responses (if present), Returns |
 | [GetSeeAlsoTags(XPathNavigator node)](#getseealsotagsxpathnavigator-node) | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> |  |
 | [GetTypeComments(Type type)](#gettypecommentstype-type) | [TypeComments](#typecomments-class) | Return Summary comments for specified type.<br>For Delegate types Parameters field may be returned as well. |
-## Constructors
+### Constructors
 
-### DocXmlReader(string fileName, bool unindentText)
+#### DocXmlReader(string fileName, bool unindentText)
 
 Create reader and use specified XML documentation file
 
@@ -364,7 +364,7 @@ Create reader and use specified XML documentation file
 | unindentText | bool | True if extra leading spaces should be removed from comments |
 
 
-### DocXmlReader(XPathDocument xPathDocument, bool unindentText)
+#### DocXmlReader(XPathDocument xPathDocument, bool unindentText)
 
 Create reader for specified xpath document.
 
@@ -374,7 +374,7 @@ Create reader for specified xpath document.
 | unindentText | bool | True if extra leading spaces should be removed from comments |
 
 
-### DocXmlReader(Func\<Assembly, string\> assemblyXmlPathFunction, bool unindentText)
+#### DocXmlReader(Func\<Assembly, string\> assemblyXmlPathFunction, bool unindentText)
 
 Open XML documentation files based on assemblies of types. Comment file names 
 are generated based on assembly names by replacing assembly location with .xml.
@@ -385,7 +385,7 @@ are generated based on assembly names by replacing assembly location with .xml.
 | unindentText | bool | True if extra leading spaces should be removed from comments |
 
 
-### DocXmlReader(IEnumerable\<Assembly\> assemblies, Func\<Assembly, string\> assemblyXmlPathFunction, bool unindentText)
+#### DocXmlReader(IEnumerable\<Assembly\> assemblies, Func\<Assembly, string\> assemblyXmlPathFunction, bool unindentText)
 
 Open XML documentation files based on assemblies of types. Comment file names 
 are generated based on assembly names by replacing assembly location with .xml.
@@ -397,9 +397,9 @@ are generated based on assembly names by replacing assembly location with .xml.
 | unindentText | bool | True if extra leading spaces should be removed from comments |
 
 
-## Methods
+### Methods
 
-### GetEnumComments(Type enumType, bool fillValues)
+#### GetEnumComments(Type enumType, bool fillValues)
 
 Get enum type description and comments for enum values. If **fillValues**
 is false and no comments exist for any value then ValueComments list is empty.
@@ -410,13 +410,13 @@ is false and no comments exist for any value then ValueComments list is empty.
 | fillValues | bool | True if ValueComments list should be filled even if |
 
 
-### Returns
+#### Returns
 
 [EnumComments](#enumcomments-class)
 
 EnumComment
 
-### GetMemberComment(MemberInfo memberInfo)
+#### GetMemberComment(MemberInfo memberInfo)
 
 Returns Summary comment for specified class member.
 
@@ -425,13 +425,13 @@ Returns Summary comment for specified class member.
 | memberInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### GetMemberComments(MemberInfo memberInfo)
+#### GetMemberComments(MemberInfo memberInfo)
 
 Returns comments for specified class member.
 
@@ -440,13 +440,13 @@ Returns comments for specified class member.
 | memberInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 [CommonComments](#commoncomments-class)
 
 
 
-### GetMethodComments(MethodBase methodInfo)
+#### GetMethodComments(MethodBase methodInfo)
 
 Returns comments for the method or constructor. Returns empty comments object
 if comments for method are missing in XML documentation file.
@@ -455,13 +455,13 @@ Summary, Remarks, Parameters (if present), Responses (if present), Returns
 
 
 
-### Returns
+#### Returns
 
 [MethodComments](#methodcomments-class)
 
 
 
-### GetMethodComments(MethodBase methodInfo, bool nullIfNoComment)
+#### GetMethodComments(MethodBase methodInfo, bool nullIfNoComment)
 
 Returns comments for the class method. May return null object is comments for method
 are missing in XML documentation file. 
@@ -474,25 +474,25 @@ Summary, Remarks, Parameters (if present), Responses (if present), Returns
 | nullIfNoComment | bool | Return null if comment for method is not available |
 
 
-### Returns
+#### Returns
 
 [MethodComments](#methodcomments-class)
 
 
 
-### GetSeeAlsoTags(XPathNavigator node)
+#### GetSeeAlsoTags(XPathNavigator node)
 
 
 
 
 
-### Returns
+#### Returns
 
 [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)>
 
 
 
-### GetTypeComments(Type type)
+#### GetTypeComments(Type type)
 
 Return Summary comments for specified type.
 For Delegate types Parameters field may be returned as well.
@@ -502,13 +502,13 @@ For Delegate types Parameters field may be returned as well.
 | type | [Type](https://docs.microsoft.com/en-us/dotnet/api/system.type) |  |
 
 
-### Returns
+#### Returns
 
 [TypeComments](#typecomments-class)
 
 TypeComment
 
-# EnumComments Class
+## EnumComments Class
 
 Namespace: LoxSmoke.DocXml
 
@@ -516,7 +516,7 @@ Base class: [CommonComments](#commoncomments-class)
 
 Enum type comments
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -527,7 +527,7 @@ Enum type comments
 | **Inheritdoc** | [InheritdocTag](#inheritdoctag-class) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
 | **SeeAlso** | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> | "seealso" links. |
-# EnumValueComment Class
+## EnumValueComment Class
 
 Namespace: LoxSmoke.DocXml
 
@@ -535,7 +535,7 @@ Base class: [CommonComments](#commoncomments-class)
 
 Comment of one enum value
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -549,37 +549,37 @@ Comment of one enum value
 | **Inheritdoc** | [InheritdocTag](#inheritdoctag-class) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
 | **SeeAlso** | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> | "seealso" links. |
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
 | [ToString()](#tostring) | string | Debugging-friendly text. |
-## Methods
+### Methods
 
-### ToString()
+#### ToString()
 
 Debugging-friendly text.
 
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-# InheritdocTag Class
+## InheritdocTag Class
 
 Namespace: LoxSmoke.DocXml
 
 Inheritdoc tag with optional cref attribute.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
 | **Cref** | string | Cref attribute value. This value is optional. |
-# MethodComments Class
+## MethodComments Class
 
 Namespace: LoxSmoke.DocXml
 
@@ -587,7 +587,7 @@ Base class: [CommonComments](#commoncomments-class)
 
 Method, operator and constructor comments
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -602,20 +602,20 @@ Method, operator and constructor comments
 | **Inheritdoc** | [InheritdocTag](#inheritdoctag-class) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
 | **SeeAlso** | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> | "seealso" links. |
-# SeeAlsoTag Class
+## SeeAlsoTag Class
 
 Namespace: LoxSmoke.DocXml
 
 Seealso tag with optional cref and href attributes.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
 | **Cref** | string | Cref attribute value. This value is optional. |
 | **Href** | string | Href attribute value. This value is optional. |
 | **Text** | string | The title, if any, for this link. |
-# TypeComments Class
+## TypeComments Class
 
 Namespace: LoxSmoke.DocXml
 
@@ -623,7 +623,7 @@ Base class: [CommonComments](#commoncomments-class)
 
 Class, Struct or  delegate comments
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -635,14 +635,14 @@ Class, Struct or  delegate comments
 | **Inheritdoc** | [InheritdocTag](#inheritdoctag-class) | Inheritdoc tag. Null if missing in comments. |
 | **FullCommentText** | string | Full XML comment text |
 | **SeeAlso** | [List](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1)<[SeeAlsoTag](#seealsotag-class)> | "seealso" links. |
-# XmlDocId Class
+## XmlDocId Class
 
 Namespace: LoxSmoke.DocXml
 
 Class that constructs IDs for XML documentation comments.
 IDs uniquely identify comments in the XML documentation file.
 
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
@@ -653,7 +653,7 @@ IDs uniquely identify comments in the XML documentation file.
 | [MethodId(MethodBase methodInfo)](#methodidmethodbase-methodinfo) | string | Get XML Id of a class method |
 | [PropertyId(MemberInfo propertyInfo)](#propertyidmemberinfo-propertyinfo) | string | Get XML Id of property |
 | [TypeId(Type type)](#typeidtype-type) | string | Get XML Id of the type definition. |
-## Fields
+### Fields
 
 | Name | Type | Summary |
 |---|---|---|
@@ -663,9 +663,9 @@ IDs uniquely identify comments in the XML documentation file.
 | **EventPrefix** | char | Event XML ID prefix. |
 | **TypePrefix** | char | Type name XML ID prefix. |
 | **ConstructorNameID** | string | Part of the constructor XML tag in XML document. |
-## Methods
+### Methods
 
-### EnumValueId(Type enumType, string enumName)
+#### EnumValueId(Type enumType, string enumName)
 
 Get XML Id of specified value of the enum type.
 
@@ -675,13 +675,13 @@ Get XML Id of specified value of the enum type.
 | enumName | string | The name of the value without type and namespace |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### EventId(MemberInfo eventInfo)
+#### EventId(MemberInfo eventInfo)
 
 Get XML Id of event field
 
@@ -690,13 +690,13 @@ Get XML Id of event field
 | eventInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### FieldId(MemberInfo fieldInfo)
+#### FieldId(MemberInfo fieldInfo)
 
 Get XML Id of field
 
@@ -705,13 +705,13 @@ Get XML Id of field
 | fieldInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### MemberId(MemberInfo memberInfo)
+#### MemberId(MemberInfo memberInfo)
 
 Get XML Id of any member of the type.
 
@@ -720,13 +720,13 @@ Get XML Id of any member of the type.
 | memberInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### MethodId(MethodBase methodInfo)
+#### MethodId(MethodBase methodInfo)
 
 Get XML Id of a class method
 
@@ -735,13 +735,13 @@ Get XML Id of a class method
 | methodInfo | [MethodBase](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### PropertyId(MemberInfo propertyInfo)
+#### PropertyId(MemberInfo propertyInfo)
 
 Get XML Id of property
 
@@ -750,13 +750,13 @@ Get XML Id of property
 | propertyInfo | [MemberInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.memberinfo) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-### TypeId(Type type)
+#### TypeId(Type type)
 
 Get XML Id of the type definition.
 
@@ -765,29 +765,29 @@ Get XML Id of the type definition.
 | type | [Type](https://docs.microsoft.com/en-us/dotnet/api/system.type) |  |
 
 
-### Returns
+#### Returns
 
 string
 
 
 
-# DocXmlReaderExtensions Class
+## DocXmlReaderExtensions Class
 
 Namespace: LoxSmoke.DocXml.Reflection
 
 DocXmlReader extension methods to retrieve type properties, methods, and fields
 using reflection information.
 
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
 | [Comments(DocXmlReader reader, IEnumerable<PropertyInfo> propInfos)](#commentsdocxmlreader-reader-ienumerablepropertyinfo-propinfos) | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([PropertyInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo) Info, [CommonComments](#commoncomments-class) Comments)> | Get comments for the collection of properties. |
 | [Comments(DocXmlReader reader, IEnumerable<MethodBase> methodInfos)](#commentsdocxmlreader-reader-ienumerablemethodbase-methodinfos) | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([MethodBase](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase) Info, [MethodComments](#methodcomments-class) Comments)> | Get comments for the collection of methods. |
 | [Comments(DocXmlReader reader, IEnumerable<FieldInfo> fieldInfos)](#commentsdocxmlreader-reader-ienumerablefieldinfo-fieldinfos) | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([FieldInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.fieldinfo) Info, [CommonComments](#commoncomments-class) Comments)> | Get comments for the collection of fields. |
-## Methods
+### Methods
 
-### Comments(DocXmlReader reader, IEnumerable\<PropertyInfo\> propInfos)
+#### Comments(DocXmlReader reader, IEnumerable\<PropertyInfo\> propInfos)
 
 Get comments for the collection of properties.
 
@@ -797,13 +797,13 @@ Get comments for the collection of properties.
 | propInfos | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<[PropertyInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo)> |  |
 
 
-### Returns
+#### Returns
 
 [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([PropertyInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo) Info, [CommonComments](#commoncomments-class) Comments)>
 
 
 
-### Comments(DocXmlReader reader, IEnumerable\<MethodBase\> methodInfos)
+#### Comments(DocXmlReader reader, IEnumerable\<MethodBase\> methodInfos)
 
 Get comments for the collection of methods.
 
@@ -813,13 +813,13 @@ Get comments for the collection of methods.
 | methodInfos | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<[MethodBase](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase)> |  |
 
 
-### Returns
+#### Returns
 
 [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([MethodBase](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase) Info, [MethodComments](#methodcomments-class) Comments)>
 
 
 
-### Comments(DocXmlReader reader, IEnumerable\<FieldInfo\> fieldInfos)
+#### Comments(DocXmlReader reader, IEnumerable\<FieldInfo\> fieldInfos)
 
 Get comments for the collection of fields.
 
@@ -829,19 +829,19 @@ Get comments for the collection of fields.
 | fieldInfos | [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<[FieldInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.fieldinfo)> |  |
 
 
-### Returns
+#### Returns
 
 [IEnumerable](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.ienumerable-1)<([FieldInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.fieldinfo) Info, [CommonComments](#commoncomments-class) Comments)>
 
 
 
-# ReflectionSettings Class
+## ReflectionSettings Class
 
 Namespace: LoxSmoke.DocXml.Reflection
 
 Settings used by TypeCollection to retrieve reflection info.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -855,13 +855,13 @@ Settings used by TypeCollection to retrieve reflection info.
 | **PropertyFilter** | [Func](https://docs.microsoft.com/en-us/dotnet/api/system.func-2)<[PropertyInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.propertyinfo), bool> | Checks if specified property should be added to the list of properties and the<br>set of referenced types.<br>Return true if property and types referenced by it should be examined.<br>Function should return false if property should be ignored.<br>Default implementation returns true for all properties. |
 | **MethodFilter** | [Func](https://docs.microsoft.com/en-us/dotnet/api/system.func-2)<[MethodBase](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase), bool> | Checks if specified method should be added to the list of methods and the<br>set of referenced types.<br>Return true if the method and types referenced by it should be examined.<br>Function should return false if method should be ignored.<br>Default implementation returns true for all methods. |
 | **FieldFilter** | [Func](https://docs.microsoft.com/en-us/dotnet/api/system.func-2)<[FieldInfo](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.fieldinfo), bool> | Checks if specified field should be added to the list of fields and the<br>set of referenced types.<br>Return true if field and types referenced by it should be examined.<br>Function should return false if field should be ignored.<br>Default implementation returns true for all fields. |
-# TypeCollection Class
+## TypeCollection Class
 
 Namespace: LoxSmoke.DocXml.Reflection
 
 Collection of type information objects.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|
@@ -871,7 +871,7 @@ Collection of type information objects.
 | **PendingPropTypes** | [Queue](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1)<[Type](https://docs.microsoft.com/en-us/dotnet/api/system.type)> | Types that need to have their properties, methods and fields examined. |
 | **CheckAssemblies** | [Dictionary](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2)<[Assembly](https://docs.microsoft.com/en-us/dotnet/api/system.reflection.assembly), bool> | Cached information from ExamineAssemblies call.<br>Contains the set of assemblies that should be checked or ignored. |
 | **IgnoreTypes** | [HashSet](https://docs.microsoft.com/en-us/dotnet/api/system.collections.generic.hashset-1)<[Type](https://docs.microsoft.com/en-us/dotnet/api/system.type)> | Cached information from the ExamineTypes call.<br>Contains the set of types that should be ignored. |
-## Methods
+### Methods
 
 | Name | Returns | Summary |
 |---|---|---|
@@ -882,9 +882,9 @@ Collection of type information objects.
 | [GetReferencedTypes(Assembly assembly, ReflectionSettings settings)](#getreferencedtypesassembly-assembly-reflectionsettings-settings) | void | Get all types referenced by the types from specified assembly. |
 | [GetReferencedTypes(IEnumerable<Assembly> assemblies, ReflectionSettings settings)](#getreferencedtypesienumerableassembly-assemblies-reflectionsettings-settings) | void | Get all types referenced by the types from specified assemblies.<br>Reflection information for the specified type is also returned. |
 | [UnwrapType(Type parentType, Type type)](#unwraptypetype-parenttype-type-type) | void | Recursively "unwrap" the generic type or array. If type is not generic and not an array<br>then do nothing. |
-## Methods
+### Methods
 
-### ForReferencedTypes(Type type, ReflectionSettings settings)
+#### ForReferencedTypes(Type type, ReflectionSettings settings)
 
 Get all types referenced by the specified type.
 Reflection information for the specified type is also returned.
@@ -895,13 +895,13 @@ Reflection information for the specified type is also returned.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### Returns
+#### Returns
 
 [TypeCollection](#typecollection-class)
 
 
 
-### ForReferencedTypes(Assembly assembly, ReflectionSettings settings)
+#### ForReferencedTypes(Assembly assembly, ReflectionSettings settings)
 
 Get all types referenced by the types from specified assembly.
 
@@ -911,13 +911,13 @@ Get all types referenced by the types from specified assembly.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### Returns
+#### Returns
 
 [TypeCollection](#typecollection-class)
 
 
 
-### ForReferencedTypes(IEnumerable\<Assembly\> assemblies, ReflectionSettings settings)
+#### ForReferencedTypes(IEnumerable\<Assembly\> assemblies, ReflectionSettings settings)
 
 Get all types referenced by the types from the list of assemblies.
 
@@ -927,13 +927,13 @@ Get all types referenced by the types from the list of assemblies.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### Returns
+#### Returns
 
 [TypeCollection](#typecollection-class)
 
 
 
-### GetReferencedTypes(Type type, ReflectionSettings settings)
+#### GetReferencedTypes(Type type, ReflectionSettings settings)
 
 Get all types referenced by the specified type.
 Reflection information for the specified type is also returned.
@@ -944,7 +944,7 @@ Reflection information for the specified type is also returned.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### GetReferencedTypes(Assembly assembly, ReflectionSettings settings)
+#### GetReferencedTypes(Assembly assembly, ReflectionSettings settings)
 
 Get all types referenced by the types from specified assembly.
 
@@ -954,7 +954,7 @@ Get all types referenced by the types from specified assembly.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### GetReferencedTypes(IEnumerable\<Assembly\> assemblies, ReflectionSettings settings)
+#### GetReferencedTypes(IEnumerable\<Assembly\> assemblies, ReflectionSettings settings)
 
 Get all types referenced by the types from specified assemblies.
 Reflection information for the specified type is also returned.
@@ -965,7 +965,7 @@ Reflection information for the specified type is also returned.
 | settings | [ReflectionSettings](#reflectionsettings-class) |  |
 
 
-### UnwrapType(Type parentType, Type type)
+#### UnwrapType(Type parentType, Type type)
 
 Recursively "unwrap" the generic type or array. If type is not generic and not an array
 then do nothing.
@@ -976,13 +976,13 @@ then do nothing.
 | type | [Type](https://docs.microsoft.com/en-us/dotnet/api/system.type) |  |
 
 
-# TypeInformation Class
+## TypeInformation Class
 
 Namespace: LoxSmoke.DocXml.Reflection
 
 Reflection information for the class, its methods, properties and fields.
 
-## Properties
+### Properties
 
 | Name | Type | Summary |
 |---|---|---|

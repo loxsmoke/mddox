@@ -3,15 +3,25 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using static DocXml.Reflection.ReflectionExtensions;
 
 namespace MdDox.Reflection
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public class OrderedTypeList
     {
         public TypeCollection TypeCollection { get; set; }
+        /// <summary>
+        /// Ordered list of types to document. The order is determined by the order in which the types are referenced in the XML documentation file,
+        /// with the option to specify a first type to document.
+        /// </summary>
         public List<TypeCollection.TypeInformation> TypesToDocument { get; set; }
+        /// <summary>
+        /// Hash set of types to document for quick lookup when processing members. 
+        /// This is used to determine if a member's type should be documented without having to scan the TypesToDocument list.
+        /// </summary>
         public HashSet<Type> TypesToDocumentSet { get; set; }
 
         public OrderedTypeList(TypeCollection typeCollection, Type firstType = null)
@@ -59,6 +69,10 @@ namespace MdDox.Reflection
             var typeFilter = new TypeFilter(options);
 
             var reflectionSettings = ReflectionSettings.Default;
+            reflectionSettings.PropertyFlags = typeFilter.PropertyFlags;
+            reflectionSettings.MethodFlags = typeFilter.MethodFlags;
+            reflectionSettings.FieldFlags = typeFilter.FieldFlags;
+
             reflectionSettings.FieldFilter = info => Filter(info, typeFilter, verbose);
             reflectionSettings.PropertyFilter = info => Filter(info, typeFilter, verbose);
             reflectionSettings.MethodFilter = info => Filter(info, typeFilter, verbose);
@@ -176,163 +190,135 @@ namespace MdDox.Reflection
             Console.WriteLine("File path: " + assembly.Location ?? "<empty>");
         }
 
+        /// <summary>
+        /// Decodes the specified set of field attribute flags into a space-separated string,
+        /// with the access level flag first followed by any additional flags.
+        /// </summary>
+        /// <param name="attrs"></param>
+        /// <returns>A space separated string of flags and values.</returns>
         public static string DecodeToString(FieldAttributes attrs)
         {
-            var text = string.Empty;
-            switch (attrs & FieldAttributes.FieldAccessMask)
-            {
-                case FieldAttributes.Private:
-                    text = text.Add("Private");
-                    break;
-                case FieldAttributes.FamANDAssem:
-                    text = text.Add("FamANDAssem");
-                    break;
-                case FieldAttributes.Assembly:
-                    text = text.Add("Assembly");
-                    break;
-                case FieldAttributes.Family:
-                    text = text.Add("Family");
-                    break;
-                case FieldAttributes.FamORAssem:
-                    text = text.Add("FamORAssem");
-                    break;
-                case FieldAttributes.Public:
-                    text = text.Add("Public");
-                    break;
-            }
-            if (attrs.HasFlag(FieldAttributes.Static)) text = text.Add("Static");
-            if (attrs.HasFlag(FieldAttributes.InitOnly)) text = text.Add("InitOnly");
-            if (attrs.HasFlag(FieldAttributes.Literal)) text = text.Add("Literal");
-            if (attrs.HasFlag(FieldAttributes.HasFieldRVA)) text = text.Add("HasFieldRVA");
-            if (attrs.HasFlag(FieldAttributes.SpecialName)) text = text.Add("SpecialName");
-            if (attrs.HasFlag(FieldAttributes.RTSpecialName)) text = text.Add("RTSpecialName");
-            if (attrs.HasFlag(FieldAttributes.HasFieldMarshal)) text = text.Add("HasFieldMarshal");
-            if (attrs.HasFlag(FieldAttributes.PinvokeImpl)) text = text.Add("PinvokeImpl");
-            if (attrs.HasFlag(FieldAttributes.HasDefault)) text = text.Add("HasDefault");
-            return text;
+            var flags = EnumFlags(attrs & ~FieldAttributes.FieldAccessMask);
+            return string.Join(" ", flags.Prepend((attrs & FieldAttributes.FieldAccessMask).ToString()));
         }
 
+        /// <summary>
+        /// Decodes the specified set of type attribute flags into a space-separated string.
+        /// </summary>
+        /// <param name="attrs"></param>
+        /// <returns>A space separated string of flags and values.</returns>
         public static string DecodeToString(TypeAttributes attrs)
         {
-            var text = string.Empty;
-            switch (attrs & TypeAttributes.VisibilityMask)
-            {
-                case TypeAttributes.NotPublic:
-                    text = text.Add("NotPublic");
-                    break;
-                case TypeAttributes.Public:
-                    text = text.Add("Public");
-                    break;
-                case TypeAttributes.NestedPublic:
-                    text = text.Add("NestedPublic");
-                    break;
-                case TypeAttributes.NestedPrivate:
-                    text = text.Add("NestedPrivate");
-                    break;
-                case TypeAttributes.NestedFamANDAssem:
-                    text = text.Add("NestedFamANDAssem");
-                    break;
-                case TypeAttributes.NestedAssembly:
-                    text = text.Add("NestedAssembly");
-                    break;
-                case TypeAttributes.NestedFamily:
-                    text = text.Add("NestedFamily"); // nested and protected
-                    break;
-                case TypeAttributes.NestedFamORAssem:
-                    text = text.Add("NestedFamORAssem"); // nested and protected internal
-                    break;
-            }
+            List<string> values = [
+                EnumValues(attrs & TypeAttributes.VisibilityMask, 
+                    (TypeAttributes.NotPublic, nameof(TypeAttributes.NotPublic))),
+                EnumValues(attrs & TypeAttributes.LayoutMask, 
+                    (TypeAttributes.AutoLayout, nameof(TypeAttributes.AutoLayout))),
+                EnumValues(attrs & TypeAttributes.ClassSemanticsMask, 
+                    (TypeAttributes.Class, nameof(TypeAttributes.Class)),
+                    (TypeAttributes.Interface, nameof(TypeAttributes.Interface)))];
 
-            // Use the layout mask to test for layout attributes.
-            switch (attrs & TypeAttributes.LayoutMask)
-            {
-                case TypeAttributes.AutoLayout:
-                    text = text.Add("AutoLayout");
-                    break;
-                case TypeAttributes.SequentialLayout:
-                    text = text.Add("SequentialLayout");
-                    break;
-                case TypeAttributes.ExplicitLayout:
-                    text = text.Add("ExplicitLayout");
-                    break;
-            }
-
-            // Use the class semantics mask to test for class semantics attributes.
-            switch (attrs & TypeAttributes.ClassSemanticsMask)
-            {
-                case TypeAttributes.Class:
-                    text = text.Add("Class");
-                    break;
-                case TypeAttributes.Interface:
-                    text = text.Add("Interface");
-                    break;
-            }
-
-            if ((attrs & TypeAttributes.Abstract) != 0)
-            {
-                text = text.Add("Abstract");
-            }
-
-            if ((attrs & TypeAttributes.Sealed) != 0)
-            {
-                text = text.Add("Sealed");
-            }
-            return text;
+            values.AddRange(EnumFlags(attrs, TypeAttributes.Abstract, TypeAttributes.Sealed));
+            return string.Join(" ", values);
         }
 
+        /// <summary>
+        /// Decodes the specified set of method attribute flags into a space-separated string.
+        /// </summary>
+        /// <remarks>The returned string omits the VtableLayoutMask flag and includes only relevant
+        /// MethodAttributes flags.</remarks>
+        /// <param name="attrs"></param>
+        /// <returns>A space-separated string containing the names of the decoded method attribute flags.</returns>
         public static string DecodeToString(MethodAttributes attrs)
         {
-            var text = string.Empty;
-            switch (attrs & MethodAttributes.MemberAccessMask)
-            {
-                case MethodAttributes.PrivateScope:
-                    text = text.Add("PrivateScope");
-                    text = text.Add("ReuseSlot");
-                    break;
-                case MethodAttributes.Private:
-                    text = text.Add("Private");
-                    break;
-                case MethodAttributes.FamANDAssem:
-                    text = text.Add("FamANDAssem");
-                    break;
-                case MethodAttributes.Assembly:
-                    text = text.Add("Assembly");
-                    break;
-                case MethodAttributes.Family:
-                    text = text.Add("Family");
-                    break;
-                case MethodAttributes.FamORAssem:
-                    text = text.Add("FamORAssem");
-                    break;
-                case MethodAttributes.Public:
-                    text = text.Add("Public");
-                    break;
-            }
-            if (attrs.HasFlag(MethodAttributes.UnmanagedExport)) text = text.Add("UnmanagedExport");
-            if (attrs.HasFlag(MethodAttributes.Static)) text = text.Add("Static");
-            if (attrs.HasFlag(MethodAttributes.Final)) text = text.Add("Final");
-            if (attrs.HasFlag(MethodAttributes.Virtual)) text = text.Add("Virtual");
-            if (attrs.HasFlag(MethodAttributes.HideBySig)) text = text.Add("HideBySig");
-            if (attrs.HasFlag(MethodAttributes.NewSlot)) text = text.Add("NewSlot");
-            if (attrs.HasFlag(MethodAttributes.VtableLayoutMask)) text = text.Add("VtableLayoutMask");
-            if (attrs.HasFlag(MethodAttributes.CheckAccessOnOverride)) text = text.Add("CheckAccessOnOverride");
-            if (attrs.HasFlag(MethodAttributes.Abstract)) text = text.Add("Abstract");
-            if (attrs.HasFlag(MethodAttributes.SpecialName)) text = text.Add("SpecialName");
-            if (attrs.HasFlag(MethodAttributes.RTSpecialName)) text = text.Add("RTSpecialName");
-            if (attrs.HasFlag(MethodAttributes.PinvokeImpl)) text = text.Add("PinvokeImpl");
-            if (attrs.HasFlag(MethodAttributes.HasSecurity)) text = text.Add("HasSecurity");
-            if (attrs.HasFlag(MethodAttributes.RequireSecObject)) text = text.Add("RequireSecObject");
-            return text;
+            // Ignore VtableLayoutMask
+            List<string> values = [
+                EnumValues(attrs & MethodAttributes.MemberAccessMask, 
+                (MethodAttributes.PrivateScope, nameof(MethodAttributes.PrivateScope)))];
+            
+            values.AddRange(EnumFlags(attrs,
+                MethodAttributes.UnmanagedExport,
+                MethodAttributes.Static,
+                MethodAttributes.Final,
+                MethodAttributes.Virtual,
+                MethodAttributes.HideBySig,
+                MethodAttributes.CheckAccessOnOverride,
+                MethodAttributes.Abstract,
+                MethodAttributes.SpecialName,
+                MethodAttributes.RTSpecialName,
+                MethodAttributes.PinvokeImpl,
+                MethodAttributes.HasSecurity,
+                MethodAttributes.RequireSecObject));
+            return string.Join(" ", values);
         }
+
+        /// <summary>
+        /// Decode property attributes. Do not include masks or reserved values
+        /// </summary>
+        /// <param name="attrs"></param>
+        /// <returns>List of property attribute names</returns>
         public static string DecodeToString(PropertyAttributes attrs)
         {
-            var text = string.Empty;
-            if (attrs.HasFlag(PropertyAttributes.HasDefault)) text = text.Add("HasDefault");
-            if (attrs.HasFlag(PropertyAttributes.ReservedMask)) text = text.Add("ReservedMask");
-            if (attrs.HasFlag(PropertyAttributes.RTSpecialName)) text = text.Add("RTSpecialName");
-            if (attrs.HasFlag(PropertyAttributes.SpecialName)) text = text.Add("SpecialName");
-            return text;
+            return string.Join(" ", EnumFlags(attrs, 
+                PropertyAttributes.HasDefault, 
+                PropertyAttributes.RTSpecialName, 
+                PropertyAttributes.SpecialName));
         }
+
+        #region Generic enum flag and value conversions
+        /// <summary>
+        /// Splits an enum value into its individual flag components.
+        /// </summary>
+        /// <typeparam name="T">The enum type</typeparam>
+        /// <param name="value">The combined enum value</param>
+        /// <returns>A list of individual enum flags that are set in the value</returns>
+        public static List<string> EnumFlags<T>(T value) where T : Enum
+        {
+            var result = new List<string>();
+            foreach (T flag in Enum.GetValues(typeof(T)))
+            {
+                if (!flag.Equals(default(T)) && value.HasFlag(flag))
+                {
+                    // Check if this is a single-bit flag. Multiple bits are masks
+                    var flagValue = Convert.ToUInt64(flag);
+                    if (BitOperations.PopCount(flagValue) == 1)
+                    {
+                        result.Add(flag.ToString());
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Return the list of flags in enum value. Check only specified flags.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">Value to check</param>
+        /// <param name="flags">The list of enum values to check against the value</param>
+        /// <returns>A list of flag names that are set in the value</returns>
+        public static List<string> EnumFlags<T>(T value, params T[] flags) where T : Enum
+        {
+            return flags.Where(flag => value.HasFlag(flag)).Select(flag => flag.ToString()).ToList();
+        }
+
+        /// <summary>
+        /// Return the string representation of an enum value based on a value map.
+        /// This method is used for enums that use the same value for multiple named constants, 
+        /// such as the visibility and layout masks in TypeAttributes.
+        /// When not specified enum.ToString() returns the first matching name which may not be the most descriptive one.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value">Value to check</param>
+        /// <param name="valueMap">The map of special values to their string representations</param>
+        /// <returns>The string representation of the enum value</returns>
+        public static string EnumValues<T>(T value,
+            params (T enumValue, string enumText)[] valueMap) where T : Enum
+        {
+            return valueMap.FirstOrDefault(k => value.Equals(k.Item1), (value, enumText: value.ToString()))
+                .enumText;
+        }
+        #endregion
         #endregion
     }
 }

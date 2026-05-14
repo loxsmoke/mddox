@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MdDox.Localization.Interfaces
+﻿namespace MdDox.Localization.Interfaces
 {
+    #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public interface ILocalizedStrings
     {
         string CultureName { get; }
@@ -29,10 +24,12 @@ namespace MdDox.Localization.Interfaces
         string Fields { get; }
         string Parameter {  get; }
         string Description {  get; }
+
         string Enum { get; }
         string Interface { get; }
         string Struct { get; }
         string Class { get; }
+        string Record { get; }
         string Namespace { get; }
         string Examples { get; }
         string Remarks { get; }

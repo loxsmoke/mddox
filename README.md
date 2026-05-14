@@ -1,4 +1,4 @@
-[![NuGet version](https://badge.fury.io/nu/LoxSmoke.mddox.svg)](https://badge.fury.io/nu/LoxSmoke.mddox) [![NuGet](https://img.shields.io/nuget/dt/LoxSmoke.mddox.svg)](https://www.nuget.org/packages/LoxSmoke.mddox) 
+[![NuGet version](https://badge.fury.io/nu/LoxSmoke.mddox.svg)](https://badge.fury.io/nu/LoxSmoke.mddox) [![NuGet](https://img.shields.io/nuget/dt/LoxSmoke.mddox.svg)](https://www.nuget.org/packages/LoxSmoke.mddox) [![Unit Tests](https://github.com/loxsmoke/mddox/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/loxsmoke/mddox/actions/workflows/unit-tests.yml)
 
 # mddox
 
@@ -57,7 +57,7 @@ Short format | Long format | Comment
 | -**f** format | --**format** format   |  The markdown file format. Valid values: github,bitbucket,azure. |
 |   | --**all-recursive**           | Step into all referenced assemblies recursively. |
 | -**r** assembly  | --**recursive** assembly | Step into specified referenced assemblies recursively.<br>Specify one or more assembly names separated by spaces. |
-|   | --**include** stuff | The list of space-separated filters of things to include in documentation.<br>Filter by access: subject.visibility<br>Subject is one of: [all, type, method, field, property]<br>Visibility is one of: [all, public, protected, private]<br>Example: all.public<br><br>Filter by attribute: subject.attribute.attribute_name<br>Subject is one of: [all, type, method, field, property]<br>attribute_name is the name of the attribute.<br>Example: field.attribute.JsonIgnoreAttribute<br><br>Filter by name: subject.name.wildcard<br>Subject is one of: [all, type, method, field, property]<br>wildcard is a simple wildcard matching the name.<br>Example: type.name.Hidden*<br> |
+|   | --**include** stuff | The list of space-separated filters of things to include in documentation.<br>Filter by access: subject.visibility<br>Subject is one of: [all, type, method, field, property]<br>Visibility is one of: [all, public, protected, private]<br>Example: all.public<br><br>Filter by attribute: subject.attribute.attribute_name<br>Subject is one of: [all, type, method, field, property]<br>attribute_name is the name of the attribute.<br>Example: field.attribute.JsonIgnoreAttribute<br><br>Filter by name: subject.name.wildcard<br>Subject is one of: [all, type, method, field, property]<br>wildcard is a simple wildcard matching the name.<br>Example: type.name.Hidden*<br><br>Include inherited members: subject.inherited<br>Subject is one of: [all, method, field, property]<br>By default inherited properties are included; inherited methods and fields are not.<br>Example: method.inherited |
 |   | --**exclude** stuff | The list of space-separated filters of things to exclude from documentation.<br>Syntax is the same as for include filters |
 | -**m**  | --**ignore-methods**      | Deprecated. Replaced with --exclude method.all. Do not generate documentation for methods and constructors.<br>Useful for POCO documentation. |
 | -**d**  | --**method-details**      | Generate detailed documentation for methods and constructors.<br>Setting has no effect if --ignore-methods is specified. |
@@ -94,6 +94,18 @@ Document one type and all referenced types from different assemblies
 
 ```bash
 mddox MyAssembly.dll --type ClassToDocument --recursive ReferencedAssembly1.dll --recursive ReferencedAssembly2.dll
+```
+
+Include inherited methods and fields in documentation
+
+```bash
+mddox MyAssembly.dll --include method.inherited --include field.inherited
+```
+
+Exclude inherited properties from documentation
+
+```bash
+mddox MyAssembly.dll --exclude property.inherited
 ```
 
 ## Solutions

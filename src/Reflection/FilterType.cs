@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MdDox.Reflection
+﻿namespace MdDox.Reflection
 {
+    /// <summary>
+    /// Defines the target of the filter.
+    /// </summary>
     public enum FilterType
     {
         /// <summary>

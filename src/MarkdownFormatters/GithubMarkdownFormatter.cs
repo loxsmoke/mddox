@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace MdDox.MarkdownFormatters
 {
+    /// <summary>
+    /// Markdown formatter for GitHub.
+    /// </summary>
     public class GithubMarkdownFormatter : MarkdownFormatter
     {
+        /// <inheritdoc/>
         public override string Name => "github";
 
+        /// <inheritdoc/>
         public override string EscapeSpecialChars(string text)
         {
             if (text == null) return "";

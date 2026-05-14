@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace MdDox.Reflection
 {
+    /// <summary>
+    /// Filter item used for reflection-based filtering.
+    /// </summary>
     public class FilterItem
     {
         /// <summary>
@@ -12,7 +12,7 @@ namespace MdDox.Reflection
         /// </summary>
         public FilterType FilterType;
         /// <summary>
-        /// All, certain visibilty like public or protected, presence of attribute or specific name
+        /// All, certain visibilty like public or protected, presence of attribute, specific name, or inherited
         /// </summary>
         public FilterScope FilterScope;
         /// <summary>
@@ -28,12 +28,10 @@ namespace MdDox.Reflection
         /// <summary>
         /// Filter that lets everything through.
         /// </summary>
-        public static FilterItem IncludeAll => new FilterItem() { FilterType = FilterType.All, FilterScope = FilterScope.All };
+        public static FilterItem IncludeAll => new() { FilterType = FilterType.All, FilterScope = FilterScope.All };
 
-        public override string ToString()
-        {
-            return $"{FilterType}.{FilterScope}".Add(FilterParameter, ".");
-        }
+        /// <inheritdoc/>
+        public override string ToString() => $"{FilterType}.{FilterScope}".Add(FilterParameter, ".");
 
         /// <summary>
         /// Parse the filter string and return filter item object. Use case-insensitive enum values to parse the
@@ -44,43 +42,58 @@ namespace MdDox.Reflection
         /// <returns>Parsed filter item.</returns>
         public static FilterItem Parse(string text)
         {
-            if (text.IsNullOrEmpty() || !text.Contains('.')) throw new ArgumentException($"Invalid filter item \"{text}\" format");
+            if (text.IsNullOrEmpty() || !text.Contains('.')) throw new ArgumentException($"Invalid filter item {text.Quoted()} format");
+
+            var parts = text.Split('.');
+            if (parts.Length < 2) throw new ArgumentException($"Invalid filter item {text.Quoted()} format");
+
             var item = new FilterItem();
-            var i = text.IndexOf('.');
             try
             {
-                item.FilterType = (FilterType)Enum.Parse(typeof(FilterType), text.Substring(0, i), true);
+                item.FilterType = Enum.Parse<FilterType>(parts[0], true);
             }
             catch (Exception)
             {
-                throw new ArgumentException($"Invalid filter type value \"{text}\"");
+                throw new ArgumentException($"Invalid filter type value {parts[0]} in {text.Quoted()}");
             }
-            var j = text.IndexOf('.', ++i);
+
             try
             {
-                item.FilterScope = (FilterScope)Enum.Parse(typeof(FilterScope), j < 0 ? text[i..] : text[i..j], true);
+                item.FilterScope = Enum.Parse<FilterScope>(parts[1], true);
             }
             catch (Exception)
             {
-                throw new ArgumentException($"Invalid filter scope value \"{text}\"");
+                throw new ArgumentException($"Invalid filter scope value {parts[1]} in {text.Quoted()}");
             }
-        
-            if (j > 0) // Filter parameter is the rest of the string
+
+            if (parts.Length > 2) // Filter parameter is the rest joined by '.'
             {
-                item.FilterParameter = text[(j + 1)..].DedupChar('*');
+                item.FilterParameter = string.Join('.', parts[2..]).DedupChar('*');
             }
+
             if ((item.FilterScope == FilterScope.Attribute ||
                 item.FilterScope == FilterScope.Name) &&
                 item.FilterParameter.IsNullOrEmpty())
             {
-                throw new ArgumentException($"Missing filter name parameter \"{text}\"");
+                throw new ArgumentException($"Missing filter name parameter {text.Quoted()}");
             }
+
             if (item.FilterScope == FilterScope.Attribute &&
-                item.FilterParameter.IndexOfAny(new char[] { '?', '^' }) < 0 && 
+                item.FilterParameter.IndexOfAny(['?', '^']) < 0 && 
                 !item.FilterParameter.EndsWith("Attribute"))
             {
                 item.FilterParameter += "Attribute";
             }
+
+            if (item.FilterScope == FilterScope.Inherited &&
+                item.FilterType != FilterType.All &&
+                item.FilterType != FilterType.Method &&
+                item.FilterType != FilterType.Field &&
+                item.FilterType != FilterType.Property)
+            {
+                throw new ArgumentException($"Inherited filter scope only supports All, Method, Field, or Property filter types in {text.Quoted()}");
+            }
+
             return item;
         }
     }
